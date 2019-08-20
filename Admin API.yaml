@@ -1,0 +1,463 @@
+openapi: 3.0.0
+info:
+  version: 0.0.1
+  title: Admin API Service
+  description: BFF edge service that contains all API endpoints for CRUD operations of the Customers, Products, Inventory, Order and Level Up Points. 
+servers: 
+  - url: http://localhost:8282/
+    description: Local dev server
+paths:
+  /products:
+    post:
+      summary: Creates a product with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'
+      responses:
+        '201':
+          description: product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete product information. Some required fields missing.
+    put:
+      summary: Amend a product with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product'
+      responses:
+        '201':
+          description: product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete product information. Some required fields missing.
+    get:
+      summary: returns a list of all products.
+      description: List of all products.
+      responses:
+        '200':
+          description: List of product objectss
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '422':
+          description: No products found       
+  /products/{id}:
+    get:
+      summary: returns product for id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: product with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: product with matching id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '404':
+          description: Product not found
+    delete:
+      summary: Deletes an existing product with the given product id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: product with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '404':
+          description: Product not found      
+  /customer:
+    post:
+      summary: Creates a new customer with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customer'
+      responses:
+        '201':
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customer'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete customer information. Some required fields missing.
+    put:
+      summary: Amend a customer with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customer'
+      responses:
+        '201':
+          description: customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customer'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete customer information. Some required fields missing.
+    get:
+      summary: returns a list of all customers.
+      description: List of all customers.
+      responses:
+        '200':
+          description: List of all customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customer'
+        '422':
+          description: No customer found       
+  /customer/{id}:
+    get:
+      summary: returns customer for id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: customer with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: customer with matching id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/customer'
+        '404':
+          description: Customer not found
+    delete:
+      summary: Deletes an existing customer with the given customer id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: customer with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '404':
+          description: Customer not found      
+
+  /inventory:
+    post:
+      summary: Creates new inventory with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/inventory'
+      responses:
+        '201':
+          description: Inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inventory'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete inventory information. Some required fields missing.
+    put:
+      summary: Amend an inventory with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/inventory'
+      responses:
+        '201':
+          description: inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inventory'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete inventory information. Some required fields missing.
+    get:
+      summary: returns a list of all inventory.
+      description: List of all inventory.
+      responses:
+        '200':
+          description: List of all inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inventory'
+        '422':
+          description: No inventory found       
+  /inventory/{id}:
+    get:
+      summary: returns inventory for id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: inventory with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: inventory with matching id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inventory'
+        '404':
+          description: Inventory not found
+    delete:
+      summary: Deletes an existing inventory with the given inventory id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: inventory with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '404':
+          description: Inventory not found      
+  /levelup:
+    post:
+      summary: Creates new LevelUp with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/levelup'
+      responses:
+        '201':
+          description: LevelUp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/levelup'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete Level Up information. Some required fields missing.
+    put:
+      summary: Amend a Level Up with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/levelup'
+      responses:
+        '201':
+          description: Level Up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/levelup'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete LevelUp information. Some required fields missing.
+    get:
+      summary: returns a list of all Level Up.
+      description: List of all Level Up.
+      responses:
+        '200':
+          description: List of all Level Up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/levelup'
+        '422':
+          description: No Level Up found       
+  /levelup/{id}:
+    get:
+      summary: returns Level Up for id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Level Up with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: Level Up with matching id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/levelup'
+        '404':
+          description: Level Up not found
+    delete:
+      summary: Deletes an existing Level Up with the given Level Up id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Level Up with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '404':
+          description: Level Up not found                
+
+components:
+  schemas:
+    product:
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        productDescription:
+          type: string
+        listPrice:
+          type: number
+        unitCost:
+          type: number
+          items:
+            $ref: '#/components/schemas/product'
+      required:
+        - productId
+        - productName
+        - productDescription
+        - listPrice
+        - unitCost
+    inventory:
+      properties:
+        inventoryId:
+          type: integer
+        productId:
+          type: integer
+        quantity:
+          type: integer
+          items:
+            $ref: '#/components/schemas/inventory'
+      required:
+        - inventoryId
+        - productId
+        - quantity
+    customer:
+      properties:
+        customerId:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+        zip:
+          type: string
+        email:
+          type: string          
+        phone:
+          type: string
+          items:
+            $ref: '#/components/schemas/customer'
+      required:
+        - customerId
+        - firstName
+        - lastName
+        - street
+        - city
+        - zip
+        - email        
+        - phone
+    levelup:
+      properties:
+        levelUpId:
+          type: integer
+        customerId:
+          type: integer
+        points:
+          type: integer
+        memberDate:
+          type: object
+          items:
+            $ref: '#/components/schemas/levelup'
+      required:
+        - levelUpId
+        - customerId
+        - points
+        - memberDate
+    invoice:
+      properties:
+        invoiceId:
+          type: integer
+        customerId:
+          type: integer
+        purchaseDate:
+          type: object
+          items:
+            $ref: '#/components/schemas/invoice'
+      required:
+        - inventoryId
+        - productId
+        - quantity  
+    invoiceItem:
+      properties:
+        invoiceItemId:
+          type: integer
+        invoiceId:
+          type: integer
+        inventoryId:
+          type: integer
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          items:
+            $ref: '#/components/schemas/invoiceItem'
+      required:
+        - invoiceItemId
+        - invoiceId
+        - inventoryId
+        - quantity 
+        - unitPrice
