@@ -1,0 +1,292 @@
+openapi: 3.0.0
+info:
+  version: 0.0.1
+  title: Retail API Service
+  description: BFF edge service that contains all API endpoints for searching inventory and purchasing products. 
+servers: 
+  - url: http://localhost:8181/
+    description: Local dev server
+
+paths:
+  /invoices:
+    post:
+      summary: Creates an invoice with the given information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/invoice'
+      responses:
+        '201':
+          description: invoice input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/invoice'
+        '400':
+          description: Invalid request syntax.
+        '422':
+          description: Incomplete invoice information. Some required fields missing.
+    get:
+      summary: returns a list of all invoices.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: List of all invoices.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: All invoice objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/invoice'
+        '422':
+          description: File not found       
+  /invoices/{id}:
+    get:
+      summary: returns an invoice from provided information if valid.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the invoice you would like to return.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: invoice object matching given ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/invoice'
+        '422':
+          description: File not found   
+  /invoices/customer/{id}:
+    get:
+      summary: returns a list of invoices from provided customer id if valid.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the customer you would like to return.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: List of invoice objects matching given ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/invoice'
+        '422':
+          description: File(s) not found             
+  /products/inventory/:
+    get:
+      summary: returns all products in inventory.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: List of all products in service.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: All product objects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '404':
+          description: File(s) not found         
+  /products/{id}:
+    get:
+      summary: returns product for id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: product with matching id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: product with matching id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '404':
+          description: File(s) not found    
+  /products/invoice/{id}:
+    get:
+      summary: returns products for invoice id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: products with matching invoice id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: products with matching invoice id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product'
+        '404':
+          description: File(s) not found 
+  /levelup/customer/{id}:
+    get:
+      summary: returns points for customer id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: points with matching customer id.
+          schema:
+            type: string
+            minimum: 1
+      responses:
+        '200':
+          description: points with matching customer id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/levelup'
+        '404':
+          description: File(s) not found 
+
+components:
+  schemas:
+    product:
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        productDescription:
+          type: string
+        listPrice:
+          type: number
+        unitCost:
+          type: number
+          items:
+            $ref: '#/components/schemas/product'
+      required:
+        - productId
+        - productName
+        - productDescription
+        - listPrice
+        - unitCost
+    inventory:
+      properties:
+        inventoryId:
+          type: integer
+        productId:
+          type: integer
+        quantity:
+          type: integer
+          items:
+            $ref: '#/components/schemas/inventory'
+      required:
+        - inventoryId
+        - productId
+        - quantity
+    customer:
+      properties:
+        customerId:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        street:
+          type: string
+        city:
+          type: string
+        zip:
+          type: string
+        email:
+          type: string          
+        phone:
+          type: string
+          items:
+            $ref: '#/components/schemas/customer'
+      required:
+        - customerId
+        - firstName
+        - lastName
+        - street
+        - city
+        - zip
+        - email        
+        - phone
+    levelup:
+      properties:
+        levelUpId:
+          type: integer
+        customerId:
+          type: integer
+        points:
+          type: integer
+        memberDate:
+          type: object
+          items:
+            $ref: '#/components/schemas/levelup'
+      required:
+        - levelUpId
+        - customerId
+        - points
+        - memberDate
+    invoice:
+      properties:
+        invoiceId:
+          type: integer
+        customerId:
+          type: integer
+        purchaseDate:
+          type: object
+          items:
+            $ref: '#/components/schemas/invoice'
+      required:
+        - inventoryId
+        - productId
+        - quantity  
+    invoiceItem:
+      properties:
+        invoiceItemId:
+          type: integer
+        invoiceId:
+          type: integer
+        inventoryId:
+          type: integer
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+          items:
+            $ref: '#/components/schemas/invoiceItem'
+      required:
+        - invoiceItemId
+        - invoiceId
+        - inventoryId
+        - quantity 
+        - unitPrice
+        
+        
+        
+        
