@@ -1,4 +1,4 @@
-package com.trilogyed.adminapiservice.model;
+package com.trilogyed.retailapiservice.model;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -147,3 +147,4 @@ public class Customer {
                 '}';
     }
 }
+
