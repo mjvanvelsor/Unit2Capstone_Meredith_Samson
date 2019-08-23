@@ -16,6 +16,9 @@ public interface LevelUpService {
    @RequestMapping(value = "/levelup/{levelUpId}", method = RequestMethod.GET)
    LevelUp getLevelUp(@Valid @PathVariable("levelUpId") int levelUpId);
    
+   @RequestMapping(value = "/levelup/customer/{customerId}", method = RequestMethod.GET)
+   LevelUp getLevelUpByCustomer(@Valid @PathVariable("customerId") int customerId);
+   
    @RequestMapping(value = "/levelup", method = RequestMethod.GET)
    List<LevelUp> getAllLevelUp();
    
