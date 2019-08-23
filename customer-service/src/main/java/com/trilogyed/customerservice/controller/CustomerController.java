@@ -22,6 +22,7 @@ public class CustomerController {
     @PostMapping
     @ResponseStatus(value = HttpStatus.OK)
     public Customer createCustomer(@RequestBody @Valid Customer customer){
+        customer = service.createCustomer(customer);
         return customer;
     }
 
@@ -38,23 +39,16 @@ public class CustomerController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<Customer> findAllCustomers(@PathVariable int customerId){
+    public List<Customer> findAllCustomers(){
         List<Customer> customers = service.getAllCustomers();
         return customers;
     }
 
-    @PutMapping("/{customerId}")
+    @PutMapping
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    public void updateCustomer(@PathVariable int customerId, @RequestBody @Valid Customer customer)
-            throws IllegalArgumentException {
-        if (customer.getCustomerId() == 0) {
-            customer.setCustomerId(customerId);
-        } else {
-            throw new IllegalArgumentException("Customer id must match the id in the Customer object.");
-        }
+    public void updateCustomer(@RequestBody @Valid Customer customer) {
         service.amendCustomer(customer);
     }
-
 
     @DeleteMapping("/{customerId}")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)

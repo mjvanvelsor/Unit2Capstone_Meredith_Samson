@@ -22,6 +22,7 @@ public class LevelupController {
     @PostMapping
     @ResponseStatus(value = HttpStatus.OK)
     public LevelUp createLevelUp(@RequestBody @Valid LevelUp levelUp){
+        levelUp = service.createLevelUp(levelUp);
         return levelUp;
     }
 
@@ -38,20 +39,14 @@ public class LevelupController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<LevelUp> findAllLevelUps(@PathVariable int levelUpId){
+    public List<LevelUp> findAllLevelUps(){
         List<LevelUp> levelUps = service.getAllLevelUps();
         return levelUps;
     }
 
-    @PutMapping("/{levelUpId}")
-    @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    public void updateLevelUp(@PathVariable int levelUpId, @RequestBody @Valid LevelUp levelUp)
-            throws IllegalArgumentException {
-                if (levelUp.getLevelUpId() == 0) {
-                    levelUp.setLevelUpId(levelUpId);
-                } else {
-                    throw new IllegalArgumentException("LevelUp id must match the id in the LevelUp object.");
-                }
+    @PutMapping
+    @ResponseStatus(value = HttpStatus.OK)
+    public void updateLevelUp(@RequestBody @Valid LevelUp levelUp) {
             service.amendLevelUp(levelUp);
     }
 
