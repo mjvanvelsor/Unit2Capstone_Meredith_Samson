@@ -91,7 +91,7 @@ paths:
       responses:
         '404':
           description: Product not found      
-  /customer:
+  /customers:
     post:
       summary: Creates a new customer with the given information
       requestBody:
@@ -142,7 +142,7 @@ paths:
                 $ref: '#/components/schemas/customer'
         '422':
           description: No customer found       
-  /customer/{id}:
+  /customers/{id}:
     get:
       summary: returns customer for id
       parameters:

@@ -28,7 +28,7 @@ public class Customer {
     private String zip;
     @NotNull(message = "You are missing an e-mail address")
     @Size(max = 75, message = "E-mail address cannot exceed 75 characters")
-    @Pattern(regexp = "^[\\\\w!#$%&'*+/=?`{|}~^-]+(?:\\\\.[\\\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\\\.)+[a-zA-Z]{2,6}$",
+    @Pattern(regexp = "^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$",
             message = "Please check your e-mail address for invalid characters")
     private String email;
     @NotNull(message = "You are missing a phone number")
