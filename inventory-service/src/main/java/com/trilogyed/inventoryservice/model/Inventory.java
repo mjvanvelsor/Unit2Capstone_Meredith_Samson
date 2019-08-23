@@ -1,4 +1,4 @@
-package com.trilogyed.adminapiservice.model;
+package com.trilogyed.inventoryservice.model;
 
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -68,3 +68,4 @@ public class Inventory {
                 '}';
     }
 }
+

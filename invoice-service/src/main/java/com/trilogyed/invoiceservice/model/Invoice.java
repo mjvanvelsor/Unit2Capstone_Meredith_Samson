@@ -1,4 +1,4 @@
-package com.trilogyed.adminapiservice.model;
+package com.trilogyed.invoiceservice.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 
 public class Invoice {
-
     private int invoiceId;
     @Positive
     private int customerId;
@@ -92,4 +91,3 @@ public class Invoice {
                 '}';
     }
 }
-

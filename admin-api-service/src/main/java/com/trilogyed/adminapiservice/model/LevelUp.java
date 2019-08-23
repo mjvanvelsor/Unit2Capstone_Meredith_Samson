@@ -1,12 +1,24 @@
 package com.trilogyed.adminapiservice.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.util.Objects;
 
 public class LevelUp {
     private int levelUpId;
+    @Positive
     private int customerId;
+    @Positive
     private int points;
+    @NotNull
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     private LocalDate memberDate;
 
     public LevelUp() {

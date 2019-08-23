@@ -1,14 +1,26 @@
 package com.trilogyed.adminapiservice.model;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Product {
 
     private int productId;
+    @NotEmpty(message = "Insert product name")
     private String productName;
+    @NotEmpty(message = "Insert product description")
     private String productDescription;
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = true)
+    @DecimalMax(value = "9999999.99", inclusive = true)
     private BigDecimal listPrice;
+    @NotNull
+    @DecimalMin(value = "0.0", inclusive = true)
+    @DecimalMax(value = "9999999.99", inclusive = true)
     private BigDecimal unitCost;
 
     public Product() {

@@ -1,4 +1,4 @@
-package com.trilogyed.adminapiservice.model;
+package com.trilogyed.invoiceservice.model;
 
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public class InvoiceItem {
-
     private int id;
     @Positive
     private int invoiceId;
@@ -100,4 +99,5 @@ public class InvoiceItem {
                 '}';
     }
 }
+
 
