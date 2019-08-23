@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.xml.ws.Service;
 import java.util.List;
 
 @RestController
@@ -28,7 +27,7 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public Product findComment(@PathVariable int productId)
+    public Product findProduct(@PathVariable int productId)
             throws NotFoundException{
         Product product = service.getProduct(productId);
         if (product == null){
@@ -39,7 +38,7 @@ public class ProductController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<Product> findAllComments(@PathVariable int productId){
+    public List<Product> findAllProducts(@PathVariable int productId){
         List<Product> products = service.getAllProducts();
         return products;
     }

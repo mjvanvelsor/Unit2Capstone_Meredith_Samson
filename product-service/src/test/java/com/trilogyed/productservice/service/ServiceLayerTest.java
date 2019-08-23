@@ -88,7 +88,7 @@ public class ServiceLayerTest {
         service.deleteProduct(1);
         Product product = service.getProduct(1);
 
-        ArgumentCaptor<Integer>productCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<Integer> productCaptor = ArgumentCaptor.forClass(Integer.class);
         verify(productDao).deleteProduct(productCaptor.capture());
         assertEquals(product.getProductId(), productCaptor.getValue().intValue());
     }
