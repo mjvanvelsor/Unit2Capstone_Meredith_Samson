@@ -5,14 +5,18 @@ import com.trilogyed.customerservice.dao.CustomerDaoJdbcTemplateImpl;
 import com.trilogyed.customerservice.model.Customer;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class ServiceLayerTest {
 
     CustomerDao customerDao;
