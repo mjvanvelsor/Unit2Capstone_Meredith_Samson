@@ -73,4 +73,35 @@ public class LevelUpDaoJdbcTemplateImplTest {
 
         assertEquals(levelUp, dao.getLevelUp(levelUp.getLevelUpId()));
     }
+    
+    @Test
+    public void getLevelUpByCustomer() {
+        LevelUp levelUp = new LevelUp();
+        levelUp.setLevelUpId(1);
+        levelUp.setCustomerId(34567);
+        levelUp.setPoints(150);
+        levelUp.setMemberDate(LocalDate.of(2019,8,20));
+        dao.createLevelUp(levelUp);
+    
+        LevelUp levelUps = dao.getLevelUpByCustomer(34567);
+        assertNotNull(levelUps);
+    
+    }
+    
+    @Test
+    public void amendLevelUpByCustomer() {
+        LevelUp levelUp = new LevelUp();
+        levelUp.setLevelUpId(1);
+        levelUp.setCustomerId(34567);
+        levelUp.setPoints(150);
+        levelUp.setMemberDate(LocalDate.of(2019,8,20));
+        dao.createLevelUp(levelUp);
+        
+        levelUp.setPoints(levelUp.getPoints() + 20);
+        dao.amendLevelUpByCustomer(levelUp);
+    
+        LevelUp updatedlevelUps = dao.getLevelUpByCustomer(34567);
+        assertEquals(170, updatedlevelUps.getPoints());
+    }
+
 }
