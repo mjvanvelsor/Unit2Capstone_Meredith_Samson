@@ -1,11 +1,12 @@
 package com.trilogyed.retailapiservice.service;
 
 import com.trilogyed.retailapiservice.exception.InsufficientInventoryException;
+import com.trilogyed.retailapiservice.exception.NotFoundException;
 import com.trilogyed.retailapiservice.model.*;
 import com.trilogyed.retailapiservice.util.feign.*;
-import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceLevelupViewmodel;
-import com.trilogyed.retailapiservice.viewmodel.InvoiceItemInventoryProductViewmodel;
-import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewmodel;
+import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceViewModel;
+import com.trilogyed.retailapiservice.viewmodel.CustomerOrderViewModel;
+import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +19,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -55,10 +55,10 @@ public class ServiceLayerTest {
    
    private void setupCustomerServiceMock() {
       Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
+            "Firstname", "Lastname", "Street name",
+            "Charlotte", "28205", "customer@gmail.com", "704-987-0986");
       Mockito.doReturn(customer).when(customerService).getCustomer(100);
-   
+      
    }
    
    private void setupInventoryServiceMock() {
@@ -97,20 +97,20 @@ public class ServiceLayerTest {
       prod2A.setProductDescription("Product description 2");
       prod2A.setListPrice(new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN));
       prod2A.setUnitCost(new BigDecimal(4.59).setScale(2, RoundingMode.HALF_EVEN));
-   
+      
       Product prod2B = new Product();
       prod2B.setProductName("Product name 2");
       prod2B.setProductDescription("Product description 2");
       prod2B.setListPrice(new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN));
       prod2B.setUnitCost(new BigDecimal(4.59).setScale(2, RoundingMode.HALF_EVEN));
-   
+      
       Product prod3A = new Product();
       prod3A.setProductId(3);
       prod3A.setProductName("Product name 3");
       prod3A.setProductDescription("Product description 3");
       prod3A.setListPrice(new BigDecimal(20.99).setScale(2, RoundingMode.HALF_EVEN));
       prod3A.setUnitCost(new BigDecimal(5.59).setScale(2, RoundingMode.HALF_EVEN));
-   
+      
       Product prod3B = new Product();
       prod3B.setProductName("Product name 3");
       prod3B.setProductDescription("Product description 3");
@@ -127,281 +127,252 @@ public class ServiceLayerTest {
       Mockito.doReturn(prod2A).when(productService).createProduct(prod2B);
       Mockito.doReturn(prod2A).when(productService).getProduct(2);
       Mockito.doReturn(prod3A).when(productService).createProduct(prod3B);
-      Mockito.doReturn(prod3A).when(productService).getProduct(3);
    }
    
    private void setupInvoiceServiceMock() {
-      // prepare customer
-      Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
-   
-      // prepare 1st invoice
-      Invoice invoice3A = new Invoice();
-      invoice3A.setInvoiceId(2);
-      invoice3A.setCustomerId(100);
-      invoice3A.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList3A = new ArrayList<>();
-      invItemsList3A.add(new InvoiceItem(1, 2, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList3A.add(new InvoiceItem(2, 2, 2,
-            4, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice3A.setInvoiceItems(invItemsList3A);
-   
-      // prepare invoice
-      Invoice invoice3B = new Invoice();
-      invoice3B.setCustomerId(100);
-      invoice3B.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList3B = new ArrayList<>();
-      invItemsList3B.add(new InvoiceItem(1, 2, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList3B.add(new InvoiceItem(2, 2, 2,
-            4, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice3B.setInvoiceItems(invItemsList3B);
+      // This process happens in the RestController,
+      // before the data is sent to the ServiceLayer
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // enter list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(1, 5));
+      orderItems1A.add(new OrderItem(2, 4));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
       
-      // prepare 1st invoice
+      // At this stage, the controller sends the order to the serviceLayer
+      // which builts it into an invoice before sending the invoice to
+      // the invoice-service for saving to the database.
       Invoice invoice1A = new Invoice();
-      invoice1A.setInvoiceId(1);
-      invoice1A.setCustomerId(100);
-      invoice1A.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
+      // Customer record is retrieved, invalid customer raises exception
+      Customer customer = new Customer(100,
+            "Firstname", "Lastname", "Street name",
+            "Charlotte", "28205", "customer@gmail.com", "704-987-0986");
+      
+      invoice1A.setCustomerId(covm1A.getCustomerId());
+      invoice1A.setPurchaseDate(covm1A.getPurchaseDate());
+      
+      // prepare list of items on the invoice. The service layer should carryout some
+      // validations on whether the item exists and has inventory to fulfill order
+      // and should throw exceptions if those rules are not met.
       List<InvoiceItem> invItemsList1A = new ArrayList<>();
-      invItemsList1A.add(new InvoiceItem(1, 1, 1,
+      invItemsList1A.add(new InvoiceItem(0, 0, 1,
             5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList1A.add(new InvoiceItem(2, 1, 2,
-            40, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList1A.add(new InvoiceItem(3, 1, 3,
+      invItemsList1A.add(new InvoiceItem(0, 0, 2,
             4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
       // add list of items to the invoice
       invoice1A.setInvoiceItems(invItemsList1A);
       
-      // prepare invoice
+      // At this stage, the pre-built invoice is sent to the invoice-service.
+      // to be written into the database and returned back to the service layer
+      // to finish building the CustomerInvoiceModel.
       Invoice invoice1B = new Invoice();
-      invoice1B.setCustomerId(100);
-      invoice1B.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
+      invoice1B.setInvoiceId(1); // invoice Id comes from the invoice-service.
+      invoice1B.setCustomerId(invoice1A.getCustomerId());
+      invoice1B.setPurchaseDate(invoice1A.getPurchaseDate());
       List<InvoiceItem> invItemsList1B = new ArrayList<>();
       invItemsList1B.add(new InvoiceItem(1, 1, 1,
             5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
       invItemsList1B.add(new InvoiceItem(2, 1, 2,
-            40, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList1B.add(new InvoiceItem(3, 1, 3,
             4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
+      // add list of items to the invoice which now has invoiceItemId and invoiceId
       invoice1B.setInvoiceItems(invItemsList1B);
-   
-      // prepare 2nd invoice
+      
+      // Finish build of the CustomerInvoiceView model
+      CustomerInvoiceViewModel civm1A = new CustomerInvoiceViewModel();
+      civm1A.setCustomerId(covm1A.getCustomerId());
+      civm1A.setInvoiceId(invoice1B.getInvoiceId());
+      civm1A.setCustomer(customer);
+      civm1A.setLevelUp(new LevelUp(0, 100, 20, LocalDate.now()));
+      civm1A.setInvoiceValue(new BigDecimal(118.91).setScale(2, RoundingMode.HALF_EVEN));
+      
+      Mockito.doReturn(invoice1B).when(invoiceService).getInvoice(1);
+      Mockito.doReturn(invoice1B).when(invoiceService).createInvoice(invoice1A);
+      
+      // Mock for insufficient stock exception
+      CustomerOrderViewModel covm2A = new CustomerOrderViewModel();
+      covm2A.setCustomerId(100);
+      covm2A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems2A = new ArrayList<>();
+      orderItems2A.add(new OrderItem(1, 6));
+      orderItems2A.add(new OrderItem(2, 500));
+      // add list of items to the order
+      covm2A.setOrderItemList(orderItems2A);
+      
       Invoice invoice2A = new Invoice();
-      invoice2A.setInvoiceId(1);
-      invoice2A.setCustomerId(100);
-      invoice2A.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
+      // Customer is retrieved, invalid customer raises exception
+      invoice2A.setCustomerId(covm2A.getCustomerId());
+      invoice2A.setPurchaseDate(covm2A.getPurchaseDate());
+      
       List<InvoiceItem> invItemsList2A = new ArrayList<>();
-      invItemsList2A.add(new InvoiceItem(1, 1, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList2A.add(new InvoiceItem(2, 1, 2,
-            40, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList2A.add(new InvoiceItem(3, 1, 3,
-            4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
+      invItemsList2A.add(new InvoiceItem(0, 0, 1,
+            6, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
+      invItemsList2A.add(new InvoiceItem(0, 0, 2,
+            500, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
       // add list of items to the invoice
       invoice2A.setInvoiceItems(invItemsList2A);
    
-      // prepare invoice
-      Invoice invoice2B = new Invoice();
-      invoice2B.setCustomerId(100);
-      invoice2B.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList2B = new ArrayList<>();
-      invItemsList2B.add(new InvoiceItem(1, 1, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList2B.add(new InvoiceItem(2, 1, 2,
-            40, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList2B.add(new InvoiceItem(3, 1, 3,
-            4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
+      // Mock non-existent inventory exception
+      CustomerOrderViewModel covm3A = new CustomerOrderViewModel();
+      covm3A.setCustomerId(100);
+      covm3A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems3A = new ArrayList<>();
+      orderItems3A.add(new OrderItem(300, 7));
+      orderItems3A.add(new OrderItem(200, 5));
+      // add list of items to the order
+      covm3A.setOrderItemList(orderItems3A);
+      
+      Invoice invoice3A = new Invoice();
+      // Customer is retrieved, invalid customer raises exception
+      invoice3A.setCustomerId(covm3A.getCustomerId());
+      invoice3A.setPurchaseDate(covm3A.getPurchaseDate());
+      
+      List<InvoiceItem> invItemsList3A = new ArrayList<>();
+      invItemsList3A.add(new InvoiceItem(0, 0, 300,
+            7, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
+      invItemsList3A.add(new InvoiceItem(0, 0, 200,
+            5, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
       // add list of items to the invoice
-      invoice2B.setInvoiceItems(invItemsList2B);
+      invoice3A.setInvoiceItems(invItemsList3A);
+      
+      // GetAll scenarios
+      // 1st invoice
+      Invoice invoice4A = new Invoice();
+      invoice4A.setInvoiceId(3); // invoice Id comes from the invoice-service layer.
+      invoice4A.setCustomerId(100);
+      invoice4A.setPurchaseDate(invoice3A.getPurchaseDate());
+      List<InvoiceItem> invItemsList4A = new ArrayList<>();
+      invItemsList4A.add(new InvoiceItem(1, 3, 300,
+            7, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
+      invItemsList4A.add(new InvoiceItem(2, 3, 200,
+            5, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
+      // add list of items to the invoice which now has invoiceItemId and invoiceId
+      invoice4A.setInvoiceItems(invItemsList4A);
+      
+      //2nd invoice
+      Invoice invoice4B = new Invoice();
+      invoice4B.setInvoiceId(3); // invoice Id comes from the invoice-service layer.
+      invoice4B.setCustomerId(100);
+      invoice4B.setPurchaseDate(invoice3A.getPurchaseDate());
+      List<InvoiceItem> invItemsList4B = new ArrayList<>();
+      invItemsList4B.add(new InvoiceItem(1, 3, 300,
+            7, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
+      invItemsList4B.add(new InvoiceItem(2, 3, 200,
+            5, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
+      // add list of items to the invoice which now has invoiceItemId and invoiceId
+      invoice4B.setInvoiceItems(invItemsList4B);
+      
       List<Invoice> allInvoices = new ArrayList<>();
-      allInvoices.add(invoice1A);
-      allInvoices.add(invoice2A);
+      allInvoices.add(invoice4A);
+      allInvoices.add(invoice4B);
       
       Mockito.doReturn(allInvoices).when(invoiceService).getAllInvoices();
       Mockito.doReturn(allInvoices).when(invoiceService).getInvoicesByCustomerId(100);
-      Mockito.doReturn(invoice3A).when(invoiceService).getInvoice(2);
-      Mockito.doReturn(invoice3A).when(invoiceService).createInvoice(invoice3B);
       
    }
    
    private void setupLevelUpServiceMock() {
-      LevelUp levelUp = new LevelUp(0, 100, 10, LocalDate.now());
+      LevelUp levelUp = new LevelUp(0, 100, 20, LocalDate.now());
       Mockito.doReturn(levelUp).when(levelUpService).getLevelUpByCustomer(100);
    }
-   
+
    @Test
-   public void submitInvoice() {
-      Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
+   public void submitGetInvoice() {
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(1, 5));
+      orderItems1A.add(new OrderItem(2, 4));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
       
-      // prepare invoice
-      Invoice invoice = new Invoice();
-      invoice.setCustomerId(100);
-      invoice.setPurchaseDate(LocalDate.now());
-      
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList = new ArrayList<>();
-      invItemsList.add(new InvoiceItem(1, 2, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList.add(new InvoiceItem(2, 2, 2,
-            4, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice.setInvoiceItems(invItemsList);
-      double invoiceValue = service.calculateInvoiceValue(invItemsList);
-      int points = Math.floorDiv((int)invoiceValue, 50) * 10;
-      
-      LevelUp levelUp = null;
-      if (points > 0) {
-         levelUp = new LevelUp();
-         levelUp.setCustomerId(100);
-         levelUp.setPoints(points);
-         levelUp.setMemberDate(LocalDate.now());
-      }
-      
-      // populate CustomerInvoiceLevelupViewModel
-      CustomerInvoiceLevelupViewmodel viewModel = new CustomerInvoiceLevelupViewmodel();
-      
-      viewModel.setCustomerId(100);
-      viewModel.setCustomer(customer);
-      viewModel.setInvoice(invoice);
-      viewModel.setInvoiceValue(new BigDecimal(invoiceValue).setScale(2, RoundingMode.HALF_EVEN));
-      viewModel.setLevelUp(levelUp);
-      System.out.println("Expected: " + levelUp);
-      viewModel = service.submitInvoice(viewModel);
-      
-      // Get the invoice submitted
-      CustomerInvoiceLevelupViewmodel viewmodel1 = service.getInvoice(viewModel.getInvoiceId());
-      assertEquals(viewModel, viewmodel1);
+      // Get the created invoice and compare it with the retrieved invoice
+      CustomerInvoiceViewModel civm1 = service.getInvoice(civm.getInvoiceId());
+      assertEquals(civm, civm1);
       
    }
-
+   
    @Test(expected = InsufficientInventoryException.class)
-   public void submitInvoice_InsufficientInventory() {
-      Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
-
-      // prepare invoice
-      Invoice invoice = new Invoice();
-      invoice.setCustomerId(100);
-      invoice.setPurchaseDate(LocalDate.now());
-
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList = new ArrayList<>();
-      invItemsList.add(new InvoiceItem(1, 1, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList.add(new InvoiceItem(2, 1, 2,
-            40, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList.add(new InvoiceItem(3, 1, 3,
-            4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice.setInvoiceItems(invItemsList);
-      double invoiceValue = service.calculateInvoiceValue(invItemsList);
-      int points = Math.floorDiv((int)invoiceValue, 50) * 10;
-
-      LevelUp levelUp = null;
-      if (points > 0) {
-         levelUp = new LevelUp();
-         levelUp.setLevelUpId(0);
-         levelUp.setCustomerId(100);
-         levelUp.setPoints(points);
-         levelUp.setMemberDate(LocalDate.now());
-      }
-
-      // populate CustomerInvoiceLevelupViewModel
-      CustomerInvoiceLevelupViewmodel viewModel = new CustomerInvoiceLevelupViewmodel();
-
-      viewModel.setCustomerId(100);
-      viewModel.setCustomer(customer);
-      viewModel.setInvoice(invoice);
-      viewModel.setInvoiceValue(new BigDecimal(invoiceValue).setScale(2, RoundingMode.HALF_EVEN));
-      viewModel.setLevelUp(levelUp);
-      viewModel = service.submitInvoice(viewModel);
-
-      // Get the invoice submitted
-      CustomerInvoiceLevelupViewmodel viewmodel1 = service.getInvoice(viewModel.getInvoiceId());
-      assertEquals(viewModel, viewmodel1);
-
+   public void submitInvoice_InsufficientInventoryException() {
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(1, 5));
+      orderItems1A.add(new OrderItem(2, 500));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
+      
+      // Get the created invoice and compare it with the retrieved invoice
+      CustomerInvoiceViewModel civm1 = service.getInvoice(civm.getInvoiceId());
+      assertEquals(civm, civm1);
+      
    }
-
-   @Test
-   public void getInvoice() {
-      Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
    
-      // prepare invoice
-      Invoice invoice = new Invoice();
-      invoice.setCustomerId(100);
-      invoice.setPurchaseDate(LocalDate.now());
-   
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList = new ArrayList<>();
-      invItemsList.add(new InvoiceItem(1, 2, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList.add(new InvoiceItem(2, 2, 2,
-            4, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice.setInvoiceItems(invItemsList);
-      double invoiceValue = service.calculateInvoiceValue(invItemsList);
-      int points = Math.floorDiv((int)invoiceValue, 50) * 10;
-   
-      LevelUp levelUp = null;
-      if (points > 0) {
-         levelUp = new LevelUp();
-         levelUp.setCustomerId(100);
-         levelUp.setPoints(points);
-         levelUp.setMemberDate(LocalDate.now());
-      }
-   
-      // populate CustomerInvoiceLevelupViewModel
-      CustomerInvoiceLevelupViewmodel viewModel = new CustomerInvoiceLevelupViewmodel();
-   
-      viewModel.setCustomerId(100);
-      viewModel.setCustomer(customer);
-      viewModel.setInvoice(invoice);
-      viewModel.setInvoiceValue(new BigDecimal(invoiceValue).setScale(2, RoundingMode.HALF_EVEN));
-      viewModel.setLevelUp(levelUp);
-      System.out.println("Expected: " + levelUp);
-      viewModel = service.submitInvoice(viewModel);
-   
-      // Get the invoice submitted
-      CustomerInvoiceLevelupViewmodel viewmodel1 = service.getInvoice(viewModel.getInvoiceId());
-      assertEquals(viewModel, viewmodel1);
-   
-      assertEquals(viewmodel1, viewModel);
+   @Test(expected = NotFoundException.class)
+   public void submitInvoice_InventoryNotFoundException() {
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(300, 7));
+      orderItems1A.add(new OrderItem(200, 5));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
+      
+      // Get the created invoice and compare it with the retrieved invoice
+      CustomerInvoiceViewModel civm1 = service.getInvoice(civm.getInvoiceId());
+      assertEquals(civm, civm1);
+      
    }
-
+   
+   @Test(expected = NotFoundException.class)
+   public void submitInvoice_InvalidCustomerException() {
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(999999999);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(1, 7));
+      orderItems1A.add(new OrderItem(2, 5));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
+      
+      // Get the created invoice and compare it with the retrieved invoice
+      CustomerInvoiceViewModel civm1 = service.getInvoice(civm.getInvoiceId());
+      assertEquals(civm, civm1);
+      
+   }
+   
    @Test
    public void getAllInvoices() {
-      List<CustomerInvoiceLevelupViewmodel> rvmList = service.getAllInvoices();
+      List<CustomerInvoiceViewModel> rvmList = service.getAllInvoices();
       assertEquals(2, rvmList.size());
    }
-
+   
    @Test
    public void getInvoicesByCustomerId() {
-      List<CustomerInvoiceLevelupViewmodel> rvmList = service.getInvoicesByCustomerId(100);
+      List<CustomerInvoiceViewModel> rvmList = service.getInvoicesByCustomerId(100);
       assertEquals(2, rvmList.size());
    }
-
+   
    @Test
    public void createGetProduct() {
       Product prod1 = new Product();
@@ -410,15 +381,15 @@ public class ServiceLayerTest {
       prod1.setListPrice(new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN));
       prod1.setUnitCost(new BigDecimal(2.50).setScale(2, RoundingMode.HALF_EVEN));
       prod1 = productService.createProduct(prod1);
-
+      
       Product prod2 = productService.getProduct(prod1.getProductId());
-
+      
       assertEquals(prod2, prod1);
    }
-
+   
    @Test
    public void getProductsInInventory() {
-
+      
       // Create products
       Product prod1 = new Product();
       prod1.setProductName("Product name 1");
@@ -426,106 +397,75 @@ public class ServiceLayerTest {
       prod1.setListPrice(new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN));
       prod1.setUnitCost(new BigDecimal(2.50).setScale(2, RoundingMode.HALF_EVEN));
       prod1 = productService.createProduct(prod1);
-
+      
       Product prod2 = new Product();
       prod2.setProductName("Product name 2");
       prod2.setProductDescription("Product description 2");
       prod2.setListPrice(new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN));
       prod2.setUnitCost(new BigDecimal(4.59).setScale(2, RoundingMode.HALF_EVEN));
       prod2 = productService.createProduct(prod2);
-
-
+      
+      
       Product prod3 = new Product();
       prod3.setProductName("Product name 3");
       prod3.setProductDescription("Product description 3");
       prod3.setListPrice(new BigDecimal(20.99).setScale(2, RoundingMode.HALF_EVEN));
       prod3.setUnitCost(new BigDecimal(5.59).setScale(2, RoundingMode.HALF_EVEN));
       prod3 = productService.createProduct(prod3);
-
+      
       // Create inventory
       Inventory inv1 = new Inventory(1, prod1.getProductId(), 30);
       Inventory inv2 = new Inventory(2, prod2.getProductId(), 25);
       Inventory inv3 = new Inventory(3, prod3.getProductId(), 0);
-
+      
       // Populate ProductsInInventoryViewmodel list
-      List<ProductsInInventoryViewmodel> productsInInv = new ArrayList<>();
-      productsInInv.add(new ProductsInInventoryViewmodel(inv1, prod1));
-      productsInInv.add(new ProductsInInventoryViewmodel(inv2, prod2));
-      productsInInv.add(new ProductsInInventoryViewmodel(inv3, prod3));
-
+      List<ProductsInInventoryViewModel> productsInInv = new ArrayList<>();
+      productsInInv.add(new ProductsInInventoryViewModel(inv1, prod1));
+      productsInInv.add(new ProductsInInventoryViewModel(inv2, prod2));
+      productsInInv.add(new ProductsInInventoryViewModel(inv3, prod3));
+      
       // I am checking if the method returns two objects in the list because inv3 has zero inventory.
-      List<ProductsInInventoryViewmodel> productsInInv1 = service.getProductsInInventory();
+      List<ProductsInInventoryViewModel> productsInInv1 = service.getProductsInInventory();
       assertEquals(2, productsInInv1.size());
-
+      
    }
-
+   
    @Test
    public void getProductByInvoiceId() {
-
-      // 1. create invoice
-      Customer customer = new Customer(100,
-            "Firstname","Lastname","Street name",
-            "Charlotte","28205","customer@gmail.com","704-987-0986");
-
-      // prepare invoice
-      Invoice invoice = new Invoice();
-      invoice.setCustomerId(100);
-      invoice.setPurchaseDate(LocalDate.now());
-
-      // prepare list of items on the invoice
-      List<InvoiceItem> invItemsList = new ArrayList<>();
-      invItemsList.add(new InvoiceItem(1, 2, 1,
-            5, new BigDecimal(10.99).setScale(2, RoundingMode.HALF_EVEN)));
-      invItemsList.add(new InvoiceItem(2, 2, 2,
-            4, new BigDecimal(6.99).setScale(2, RoundingMode.HALF_EVEN)));
-//      invItemsList.add(new InvoiceItem(3, 1, 3,
-//            4, new BigDecimal(15.99).setScale(2, RoundingMode.HALF_EVEN)));
-      // add list of items to the invoice
-      invoice.setInvoiceItems(invItemsList);
-      double invoiceValue = service.calculateInvoiceValue(invItemsList);
-      int points = Math.floorDiv((int)invoiceValue, 50) * 10;
-
-      LevelUp levelUp = null;
-      if (points > 0) {
-         levelUp = new LevelUp();
-         levelUp.setLevelUpId(0);
-         levelUp.setCustomerId(100);
-         levelUp.setPoints(points);
-         levelUp.setMemberDate(LocalDate.now());
-      }
-
-      // populate CustomerInvoiceLevelupViewModel
-      CustomerInvoiceLevelupViewmodel viewModel = new CustomerInvoiceLevelupViewmodel();
-
-      viewModel.setCustomerId(100);
-      viewModel.setCustomer(customer);
-      viewModel.setInvoice(invoice);
-      viewModel.setInvoiceValue(new BigDecimal(invoiceValue).setScale(2, RoundingMode.HALF_EVEN));
-      viewModel.setLevelUp(levelUp);
-      viewModel = service.submitInvoice(viewModel);
-
-      // Get the invoice submitted
-      CustomerInvoiceLevelupViewmodel viewmodel1 = service.getInvoice(viewModel.getInvoiceId());
-
-      // 3. get inventory record using the inventory Id on the Invoice Item from inventory-service
-      List<InvoiceItemInventoryProductViewmodel> productViewmodelList = new ArrayList<>();
-      InvoiceItem invoiceItem = new InvoiceItem();
-      Inventory inventory = new Inventory();
-      Product product = new Product();
-      List<Product> productList = new ArrayList<>();
-      Iterator<InvoiceItem> iter = invItemsList.iterator();
-      while(iter.hasNext()) {
-         invoiceItem = iter.next();
-         inventory = inventoryService.getInventory(invoiceItem.getInventoryId());
-         product = productService.getProduct(inventory.getProductId());
-         productList.add(product);
-      }
-
-      List<Product> productList1 = service.getProductByInvoiceId(viewModel.getInvoiceId());
-      assertEquals(productList, productList1);
-
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(1, 5));
+      orderItems1A.add(new OrderItem(2, 4));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
+      
+      List<Product> productList1 = service.getProductByInvoiceId(civm.getInvoiceId());
+      assertEquals(2, productList1.size());
    }
-
+   
+   @Test(expected = NotFoundException.class)
+   public void getProductByInvoiceId_InvalidInvoiceId() {
+      // prepare CustomerOrderViewModel (that is, the customer order)
+      CustomerOrderViewModel covm1A = new CustomerOrderViewModel();
+      covm1A.setCustomerId(100);
+      covm1A.setPurchaseDate(LocalDate.now());
+      // prepare list of items on the order
+      List<OrderItem> orderItems1A = new ArrayList<>();
+      orderItems1A.add(new OrderItem(91, 5));
+      orderItems1A.add(new OrderItem(129999992, 4));
+      // add list of items to the order
+      covm1A.setOrderItemList(orderItems1A);
+      CustomerInvoiceViewModel civm = service.submitInvoice(covm1A);
+      
+      List<Product> productList1 = service.getProductByInvoiceId(civm.getInvoiceId());
+      assertEquals(2, productList1.size());
+   }
+   
    @Test
    public void calculateInvoiceValueAndPoints() {
 

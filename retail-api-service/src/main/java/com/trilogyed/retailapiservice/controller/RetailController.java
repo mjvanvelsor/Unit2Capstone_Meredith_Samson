@@ -2,16 +2,33 @@ package com.trilogyed.retailapiservice.controller;
 
 import com.trilogyed.retailapiservice.model.Invoice;
 import com.trilogyed.retailapiservice.model.Product;
+import com.trilogyed.retailapiservice.service.ServiceLayer;
+import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceViewModel;
+import com.trilogyed.retailapiservice.viewmodel.CustomerOrderViewModel;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RefreshScope
 public class RetailController {
+   public static final String EXCHANGE = "levelup-exchange";
+   public static final String ROUTING_KEY = "levelup.create.#";
+   
+   @Autowired
+   ServiceLayer service;
+   
+   @Autowired
+   private RabbitTemplate rabbitTemplate;
    
    @RequestMapping(value = "/invoices", method = RequestMethod.POST)
-   public Invoice submitInvoice(@RequestBody Invoice invoice) {
-      return null;
+   //public CustomerInvoiceLevelupViewmodel submitInvoice(CustomerInvoiceLevelupViewmodel order)
+   public CustomerInvoiceViewModel submitInvoice(@RequestBody CustomerOrderViewModel order) {
+      CustomerInvoiceViewModel invoice = service.submitInvoice(order);
+      return invoice;
    }
    
    @RequestMapping(value = "/invoices/{id}", method = RequestMethod.GET)

@@ -13,6 +13,12 @@ public class InvoiceItem {
 
     public InvoiceItem() {
     }
+    
+    public InvoiceItem(int inventoryId, int quantity, BigDecimal unitPrice) {
+        this.inventoryId = inventoryId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
 
     public InvoiceItem(int invoiceItemId, int invoiceId, int inventoryId, int quantity, BigDecimal unitPrice) {
         this.invoiceItemId = invoiceItemId;
@@ -84,7 +90,7 @@ public class InvoiceItem {
         return "InvoiceItem{" +
                 "invoiceItemId=" + invoiceItemId +
                 ", invoiceId=" + invoiceId +
-                ", inventory_id=" + inventoryId +
+                ", inventoryId=" + inventoryId +
                 ", quantity=" + quantity +
                 ", unitPrice=" + unitPrice +
                 '}';

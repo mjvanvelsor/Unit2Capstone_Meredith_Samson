@@ -5,11 +5,11 @@ import com.trilogyed.retailapiservice.model.Product;
 
 import java.util.Objects;
 
-public class ProductsInInventoryViewmodel {
+public class ProductsInInventoryViewModel {
    private Inventory inventory;
    private Product product;
    
-   public ProductsInInventoryViewmodel(Inventory inventory, Product product) {
+   public ProductsInInventoryViewModel(Inventory inventory, Product product) {
       this.inventory = inventory;
       this.product = product;
    }
@@ -34,7 +34,7 @@ public class ProductsInInventoryViewmodel {
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      ProductsInInventoryViewmodel that = (ProductsInInventoryViewmodel) o;
+      ProductsInInventoryViewModel that = (ProductsInInventoryViewModel) o;
       return Objects.equals(inventory, that.inventory) &&
             Objects.equals(product, that.product);
    }

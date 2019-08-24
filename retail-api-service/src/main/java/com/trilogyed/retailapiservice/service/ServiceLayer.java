@@ -5,13 +5,15 @@ import com.trilogyed.retailapiservice.exception.NotFoundException;
 import com.trilogyed.retailapiservice.exception.ServiceFailException;
 import com.trilogyed.retailapiservice.model.*;
 import com.trilogyed.retailapiservice.util.feign.*;
-import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceLevelupViewmodel;
-import com.trilogyed.retailapiservice.viewmodel.InvoiceItemInventoryProductViewmodel;
-import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewmodel;
+import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceViewModel;
+import com.trilogyed.retailapiservice.viewmodel.CustomerOrderViewModel;
+import com.trilogyed.retailapiservice.viewmodel.InvoiceitemInventoryProductViewModel;
+import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +40,8 @@ public class ServiceLayer {
       this.productService = productService;
    }
    
-   public CustomerInvoiceLevelupViewmodel submitInvoice(CustomerInvoiceLevelupViewmodel order) {
+   @Transactional
+   public CustomerInvoiceViewModel submitInvoice(CustomerOrderViewModel order) {
       // Get the customer. Customer may be null, so we use Optional. If customer is null, throw exception
       Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomer(order.getCustomerId()));
       optionalCustomer.orElseThrow(() -> new NotFoundException(
@@ -48,83 +51,76 @@ public class ServiceLayer {
       
       // prepare invoice
       Invoice invoice = new Invoice();
-      invoice.setCustomerId(customer.getCustomerId());
-      invoice.setPurchaseDate(LocalDate.now());
+      invoice.setCustomerId(order.getCustomerId());
+      invoice.setPurchaseDate(order.getPurchaseDate());
       
-      // add list of items to the invoice
-      invoice.setInvoiceItems(order.getInvoice().getInvoiceItems());
-      
-      // check if products are in inventory
-      List<ProductsInInventoryViewmodel> productsInInv1 = this.getProductsInInventory();
-      Map<Integer, ProductsInInventoryViewmodel> productsInInventoryMap = new HashMap<>();
-      for (int index=0; index < productsInInv1.size(); index++) {
-         productsInInventoryMap.put(productsInInv1.get(index).getInventory().getProductId(), productsInInv1.get(index));
-      }
-      
-      String errorMsg = null;
-      Product product = new Product();
-      int orderQty = 0;
+      // prepare invoice items - that is put a list price on each item,
+      // check if item exists and if order can be fulfilled,
+      // throw exception if it fails the check
+      OrderItem orderItem = new OrderItem();
+      Optional<Product> optionalProduct;
+      List<InvoiceItem> invoiceItems = new ArrayList<>();
+      BigDecimal listPrice = new BigDecimal(0.00).setScale(2, RoundingMode.HALF_EVEN);
       int inventoryQty = 0;
-      
-      for (int index=0; index < invoice.getInvoiceItems().size(); index++) {
-         product = productService.getProduct(invoice.getInvoiceItems().get(index).getInventoryId());
-         if (productsInInventoryMap.get(invoice.getInvoiceItems().get(index).getInventoryId()) == null) {
-            errorMsg += "Product Id: " + product.getProductId()
-                  + " " + product.getProductName()
-                  + " is not available in inventory,";
+      Iterator<OrderItem> iter = order.getOrderItemList().iterator();
+      while(iter.hasNext()) {
+         orderItem = iter.next();
+         optionalProduct = Optional.ofNullable(productService.getProduct(orderItem.getInventoryId()));
+         String errorMsg = "Product Id: " + orderItem.getInventoryId() + " not found in inventory";
+         optionalProduct.orElseThrow(
+               () -> new NotFoundException(errorMsg));
+         
+         OrderItem finalOrderItem = orderItem;
    
-         } else {
-   
-            // check if order quantity can be fulfilled
-            orderQty = invoice.getInvoiceItems().get(index).getQuantity();
-            inventoryQty = productsInInventoryMap.get(invoice.getInvoiceItems().get(index).getInventoryId()).getInventory().getQuantity();
-            if (orderQty > inventoryQty) {
-               errorMsg += "Product Id: " + product.getProductId()
-                     + " " + product.getProductName()
-                     + " inventory insufficient - Inventory Qty: " + inventoryQty + " Order Qty: " + orderQty + ",";
-            }
+         // check if order quantity can be fulfilled from available inventory
+         inventoryQty = inventoryService.getInventory(orderItem.getInventoryId()).getQuantity();
+         if (inventoryQty < orderItem.getQuantity()) {
+            throw new InsufficientInventoryException(
+                  "Product Id: " + orderItem.getInventoryId() +
+                        " " + optionalProduct.get().getProductName() +
+                        " has insufficient inventory of: " + inventoryQty +
+                        " against order quantity: " + orderItem.getQuantity() +
+                        ". Please reduce order quantity");
          }
+         
+         listPrice = optionalProduct.get().getListPrice();
+         
+         invoiceItems.add(
+               new InvoiceItem(orderItem.getInventoryId(), orderItem.getQuantity(), listPrice));
       }
       
-      // check if errorMsg is not empty which indicates there are error messages
-      // related to low inventory to fulfill order
-      if (errorMsg != null) {
-         throw new InsufficientInventoryException(errorMsg);
-      }
+      // add invoiceItems to invoice
+      invoice.setInvoiceItems(invoiceItems);
    
-      // calculate invoice value
-      double invoiceValue = calculateInvoiceValue(order.getInvoice().getInvoiceItems());
+      // call invoice-service to write the invoice. Service may fail to create the invoice.
+      // so check for null and throw exception
+      Optional<Invoice> optionalInvoice = Optional.ofNullable(invoiceService.createInvoice(invoice));
+      optionalInvoice.orElseThrow(() -> new ServiceFailException("invoice-service error:- Invoice not created"));
       
-      // calculate level up points
-      int points = Math.floorDiv((int)invoiceValue, 50) * 10;
+      // calculate invoice value, so we can determine LevelUp points.
+      double invoiceValue = calculateInvoiceValue(invoiceItems);
+      
+      // create LevelUp object if points "Math.floorDiv((int)invoiceValue, 50) * 10" greater than 0
       LevelUp levelUp = null;
-      if (points > 0) {
+      if (Math.floorDiv((int)invoiceValue, 50) * 10 > 0) {
          levelUp = new LevelUp();
          levelUp.setCustomerId(customer.getCustomerId());
          levelUp.setMemberDate(LocalDate.now());
-         levelUp.setPoints(points);
+         levelUp.setPoints(Math.floorDiv((int)invoiceValue, 50) * 10);
       }
    
       // populate CustomerInvoiceLevelupViewModel
-      CustomerInvoiceLevelupViewmodel viewModel = new CustomerInvoiceLevelupViewmodel();
-   
-      viewModel.setCustomerId(customer.getCustomerId());
+      CustomerInvoiceViewModel viewModel = new CustomerInvoiceViewModel();
+      viewModel.setCustomerId(order.getCustomerId());
       viewModel.setCustomer(customer);
       viewModel.setLevelUp(levelUp);
       viewModel.setInvoiceValue(new BigDecimal(invoiceValue).setScale(2, RoundingMode.HALF_EVEN));
-      
-      // call invoice-service to write the invoice. Service may fail to create the invoice.
-      Optional<Invoice> optionalInvoice = Optional.ofNullable(invoiceService.createInvoice(invoice));
-      optionalInvoice.orElseThrow(() -> new ServiceFailException("invoice-service error:- Invoice not created"));
-      invoice = optionalInvoice.get();
-      viewModel.setInvoiceId(invoice.getInvoiceId());
-      viewModel.setInvoice(invoice);
-      System.out.println("Actual: " + levelUp);
-      
+      viewModel.setInvoiceId(optionalInvoice.get().getInvoiceId());
+      viewModel.setInvoice(optionalInvoice.get());
       return viewModel;
    }
    
-   public CustomerInvoiceLevelupViewmodel getInvoice(int id) {
+   public CustomerInvoiceViewModel getInvoice(int id) {
 
       // Get the invoice submitted
       Optional<Invoice> optionalInvoice = Optional.ofNullable(invoiceService.getInvoice(id));
@@ -132,43 +128,43 @@ public class ServiceLayer {
             "Invoice Id: " + id + " not found. Please check your Invoice Id!"));
       Invoice invoice = optionalInvoice.get();
    
-      return buildCustomerInvoiceLevelupViewmodel(invoice);
+      return buildCustomerInvoiceViewModel(invoice);
       
    }
    
-   public List<CustomerInvoiceLevelupViewmodel> getAllInvoices() {
+   public List<CustomerInvoiceViewModel> getAllInvoices() {
       Optional<List<Invoice>> optionalAllInvoices = Optional.ofNullable(invoiceService.getAllInvoices());
       optionalAllInvoices.orElseThrow(() -> new NotFoundException(
             "No invoices exist in the system. Please ensure invoice-service is running if you know invoices do exist!"));
       List<Invoice> invoiceList = optionalAllInvoices.get();
       Iterator<Invoice> iter = invoiceList.iterator();
-      List<CustomerInvoiceLevelupViewmodel> viewmodelList = new ArrayList<>();
+      List<CustomerInvoiceViewModel> viewmodelList = new ArrayList<>();
       
       while(iter.hasNext()) {
-         viewmodelList.add(buildCustomerInvoiceLevelupViewmodel(iter.next()));
+         viewmodelList.add(buildCustomerInvoiceViewModel(iter.next()));
       }
       return viewmodelList;
    }
    
    
-   public List<CustomerInvoiceLevelupViewmodel> getInvoicesByCustomerId(int id) {
+   public List<CustomerInvoiceViewModel> getInvoicesByCustomerId(int id) {
    
       Optional<List<Invoice>> optionalAllInvoices = Optional.ofNullable(invoiceService.getInvoicesByCustomerId(id));
       optionalAllInvoices.orElseThrow(() -> new NotFoundException(
             "No invoices exist in the system for customer id: " + id + ". Please check your customer Id!"));
       List<Invoice> invoiceList = optionalAllInvoices.get();
       Iterator<Invoice> iter = invoiceList.iterator();
-      List<CustomerInvoiceLevelupViewmodel> viewmodelList = new ArrayList<>();
+      List<CustomerInvoiceViewModel> viewmodelList = new ArrayList<>();
    
       while(iter.hasNext()) {
-         viewmodelList.add(buildCustomerInvoiceLevelupViewmodel(iter.next()));
+         viewmodelList.add(buildCustomerInvoiceViewModel(iter.next()));
       }
       return viewmodelList;
    
    }
 
    // build CustomerInvoiceLevelupViewmodel
-   private CustomerInvoiceLevelupViewmodel buildCustomerInvoiceLevelupViewmodel(Invoice invoice) {
+   private CustomerInvoiceViewModel buildCustomerInvoiceViewModel(Invoice invoice) {
       // Get the invoice submitted
       Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomer(invoice.getCustomerId()));
       optionalCustomer.orElseThrow(() -> new NotFoundException(
@@ -179,7 +175,7 @@ public class ServiceLayer {
       Optional<LevelUp> optionalLevelUp = Optional.ofNullable(levelUpService.getLevelUpByCustomer(invoice.getCustomerId()));
    
       // populate CustomerInvoiceLevelUpViewmodel
-      CustomerInvoiceLevelupViewmodel viewmodel = new CustomerInvoiceLevelupViewmodel();
+      CustomerInvoiceViewModel viewmodel = new CustomerInvoiceViewModel();
       viewmodel.setCustomerId(invoice.getCustomerId());
       viewmodel.setInvoiceId(invoice.getInvoiceId());
       viewmodel.setInvoice(invoice);
@@ -203,7 +199,7 @@ public class ServiceLayer {
       return optionalProduct.get();
    }
    
-   public List<ProductsInInventoryViewmodel> getProductsInInventory() {
+   public List<ProductsInInventoryViewModel> getProductsInInventory() {
       // Get inventory (all items in inventory above 0)
       Optional<List<Inventory>> optionalInventoryList = Optional.ofNullable(inventoryService
             .getAllInventory()
@@ -214,13 +210,13 @@ public class ServiceLayer {
       optionalInventoryList.orElseThrow(() -> new NotFoundException(
             "No products in Inventory Found. Possible that all inventory is finished!"));
    
-      List<ProductsInInventoryViewmodel> productsInInv = new ArrayList<>();
+      List<ProductsInInventoryViewModel> productsInInv = new ArrayList<>();
       Inventory inventory = new Inventory();
       
       Iterator<Inventory> iter = optionalInventoryList.get().iterator();
       while (iter.hasNext()) {
          inventory = iter.next();
-         productsInInv.add(new ProductsInInventoryViewmodel(
+         productsInInv.add(new ProductsInInventoryViewModel(
                inventory, productService.getProduct(inventory.getProductId())));
       }
       
@@ -237,7 +233,7 @@ public class ServiceLayer {
       List<InvoiceItem> itemList = optionalInvoice.get().getInvoiceItems();
    
       // 3. get inventory record using the inventory Id on the Invoice Item from inventory-service
-      List<InvoiceItemInventoryProductViewmodel> productViewmodelList = new ArrayList<>();
+      List<InvoiceitemInventoryProductViewModel> productViewmodelList = new ArrayList<>();
       InvoiceItem invoiceItem = new InvoiceItem();
       Inventory inventory = new Inventory();
       Product product = new Product();
@@ -245,16 +241,19 @@ public class ServiceLayer {
       Iterator<InvoiceItem> iter = itemList.iterator();
       while(iter.hasNext()) {
          invoiceItem = iter.next();
-         inventory = inventoryService.getInventory(invoiceItem.getInventoryId());
-         product = productService.getProduct(inventory.getProductId());
-         productList.add(product);
+         Optional<Inventory> optionalInventory = Optional.ofNullable(inventoryService.getInventory(invoiceItem.getInventoryId()));
+         String errorMsg = "Inventory Item: " + invoiceItem.getInventoryId() + " on invoice id: " + id + " Not Found in inventory";
+         optionalInventory.orElseThrow(()-> new NotFoundException(errorMsg));
+         Optional<Product> optionalProduct = Optional.ofNullable(productService.getProduct(optionalInventory.get().getProductId()));
+         optionalProduct.orElseThrow(()-> new NotFoundException(errorMsg));
+         productList.add(optionalProduct.get());
       }
    
       return productList;
    }
    
-   public int getLevelUpPointsByCustomerId(int id) {
-      return 0;
+   public LevelUp getLevelUpPointsByCustomerId(int id) {
+      return levelUpService.getLevelUpByCustomer(id);
    }
    
    public double calculateInvoiceValue(List <InvoiceItem> itemList) {
