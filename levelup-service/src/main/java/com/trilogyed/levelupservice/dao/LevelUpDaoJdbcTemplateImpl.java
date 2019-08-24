@@ -22,10 +22,14 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
             "insert into level_up (customer_id, points, member_date) values (?, ?, ?) ";
     public static final String SELECT_LEVELUP_SQL =
             "select * from level_up where level_up_id = ?";
+    public static final String SELECT_LEVELUP_BY_CUSTOMER_SQL =
+            "select * from level_up where customer_id = ?";
     public static final String SELECT_ALL_LEVELUPS_SQL =
             "select * from level_up";
     public static final String UPDATE_LEVELUP_SQL =
             "update level_up set customer_id = ?, points = ?, member_date = ? where level_up_id = ?";
+    public static final String UPDATE_LEVELUP_BY_CUSTOMER_SQL =
+          "update level_up set points = ?, member_date = ? where customer_id = ?";
     public static final String DELETE_LEVELUP_SQL =
             "delete from level_up where level_up_id = ?";
 
@@ -56,7 +60,13 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
             return null;
         }
     }
-
+    
+    @Override
+    public LevelUp getLevelUpByCustomer(int customerId) {
+        return jdbcTemplate.queryForObject(
+              SELECT_LEVELUP_BY_CUSTOMER_SQL,this::mapRowToLevelUp, customerId);
+    }
+    
     @Override
     public List<LevelUp> getAllLevelUps() {
         return jdbcTemplate.query(SELECT_ALL_LEVELUPS_SQL, this::mapRowToLevelUp);
@@ -70,6 +80,16 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
                 levelUp.getPoints(),
                 levelUp.getMemberDate(),
                 levelUp.getLevelUpId()
+        );
+    }
+    
+    @Override
+    public void amendLevelUpByCustomer(LevelUp levelUp) {
+        jdbcTemplate.update(
+              UPDATE_LEVELUP_BY_CUSTOMER_SQL,
+              levelUp.getPoints(),
+              levelUp.getMemberDate(),
+              levelUp.getCustomerId()
         );
     }
 

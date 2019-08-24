@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class ServiceLayer {
@@ -17,7 +18,18 @@ public class ServiceLayer {
     }
 
     public LevelUp createLevelUp(LevelUp levelUp){
-        return dao.createLevelUp(levelUp);
+        Optional<LevelUp> optionalLevelUp = Optional.ofNullable(
+              this.dao.getLevelUpByCustomer(levelUp.getCustomerId()));
+        if (optionalLevelUp.isPresent()) {
+            LevelUp oldLevelUp = optionalLevelUp.get();
+            oldLevelUp.setPoints(oldLevelUp.getLevelUpId() + levelUp.getPoints());
+            oldLevelUp.setMemberDate(levelUp.getMemberDate());
+            dao.amendLevelUpByCustomer(oldLevelUp);
+            return oldLevelUp;
+        }
+        else {
+            return dao.createLevelUp(levelUp);
+        }
     }
     public LevelUp getLevelUp(int levelUpId){
         return dao.getLevelUp(levelUpId);

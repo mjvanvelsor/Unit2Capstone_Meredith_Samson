@@ -1,13 +1,14 @@
 package com.trilogyed.retailapiservice.controller;
 
-import com.trilogyed.retailapiservice.model.Invoice;
 import com.trilogyed.retailapiservice.model.Product;
 import com.trilogyed.retailapiservice.service.ServiceLayer;
 import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceViewModel;
 import com.trilogyed.retailapiservice.viewmodel.CustomerOrderViewModel;
+import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewModel;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,47 +24,63 @@ public class RetailController {
    
    @Autowired
    private RabbitTemplate rabbitTemplate;
+   public RetailController(RabbitTemplate rabbitTemplate) {
+      this.rabbitTemplate = rabbitTemplate;
+   }
    
+   @ResponseStatus(HttpStatus.CREATED)
    @RequestMapping(value = "/invoices", method = RequestMethod.POST)
-   //public CustomerInvoiceLevelupViewmodel submitInvoice(CustomerInvoiceLevelupViewmodel order)
    public CustomerInvoiceViewModel submitInvoice(@RequestBody CustomerOrderViewModel order) {
-      CustomerInvoiceViewModel invoice = service.submitInvoice(order);
-      return invoice;
+      CustomerInvoiceViewModel civm = service.submitInvoice(order);
+      
+      // Send LevelUp Points via the Queue to the levelup-service
+      System.out.println("Sending Levelup message via queue ...");
+      rabbitTemplate.convertAndSend(EXCHANGE, ROUTING_KEY, civm.getLevelUp());
+      System.out.println("Message sent ...");
+      
+      return civm;
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices/{id}", method = RequestMethod.GET)
-   public Invoice getInvoice(@PathVariable int id) {
-      return null;
+   public CustomerInvoiceViewModel getInvoice(@PathVariable int id) {
+      return service.getInvoice(id);
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices", method = RequestMethod.GET)
-   public List<Invoice> getAllInvoices() {
-      return null;
+   public List<CustomerInvoiceViewModel> getAllInvoices() {
+      return service.getAllInvoices();
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices/customer/{id}", method = RequestMethod.GET)
-   public List<Invoice> getInvoicesByCustomerId(@PathVariable int id) {
-      return null;
+   public List<CustomerInvoiceViewModel> getInvoicesByCustomerId(@PathVariable int id) {
+      return service.getInvoicesByCustomerId(id);
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/inventory", method = RequestMethod.GET)
-   public List<Product> getProductsInInventory() {
-      return null;
+   public List<ProductsInInventoryViewModel> getProductsInInventory() {
+      return service.getProductsInInventory();
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/{id}", method = RequestMethod.GET)
    public Product getProduct(@PathVariable int id) {
-      return null;
+      return service.getProduct(id);
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/invoice/{id}", method = RequestMethod.GET)
    public List<Product> getProductByInvoiceId(@PathVariable int id) {
-      return null;
+      return service.getProductByInvoiceId(id);
    }
    
+   @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/levelup/customer/{id}", method = RequestMethod.GET)
    public int getLevelUpPointsByCustomerId(int id) {
-      return 0;
+      return service.getLevelUpPointsByCustomerId(id).getPoints();
    }
    
 }
