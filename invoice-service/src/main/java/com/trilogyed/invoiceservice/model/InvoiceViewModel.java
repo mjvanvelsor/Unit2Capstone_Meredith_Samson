@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-public class Invoice {
+public class InvoiceViewModel {
     private int invoiceId;
     @Positive
     private int customerId;
@@ -20,14 +20,17 @@ public class Invoice {
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
     private LocalDate purchaseDate;
+    @NotEmpty(message = "Invoice must have invoice items.")
+    private List<InvoiceItem> invoiceItems;
 
-    public Invoice() {
+    public InvoiceViewModel() {
     }
 
-    public Invoice(int invoiceId, int customerId, LocalDate purchaseDate) {
+    public InvoiceViewModel(int invoiceId, int customerId, LocalDate purchaseDate, List<InvoiceItem> invoiceItems) {
         this.invoiceId = invoiceId;
         this.customerId = customerId;
         this.purchaseDate = purchaseDate;
+        this.invoiceItems = invoiceItems;
     }
 
     public int getInvoiceId() {
@@ -54,27 +57,28 @@ public class Invoice {
         this.purchaseDate = purchaseDate;
     }
 
+    public List<InvoiceItem> getInvoiceItems() {
+        return invoiceItems;
+    }
+
+    public void setInvoiceItems(List<InvoiceItem> invoiceItems) {
+        this.invoiceItems = invoiceItems;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Invoice invoice = (Invoice) o;
-        return invoiceId == invoice.invoiceId &&
-                customerId == invoice.customerId &&
-                purchaseDate.equals(invoice.purchaseDate);
+        InvoiceViewModel that = (InvoiceViewModel) o;
+        return invoiceId == that.invoiceId &&
+                customerId == that.customerId &&
+                purchaseDate.equals(that.purchaseDate) &&
+                invoiceItems.equals(that.invoiceItems);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(invoiceId, customerId, purchaseDate);
-    }
-
-    @Override
-    public String toString() {
-        return "Invoice{" +
-                "invoiceId=" + invoiceId +
-                ", customerId=" + customerId +
-                ", purchaseDate=" + purchaseDate +
-                '}';
+        return Objects.hash(invoiceId, customerId, purchaseDate, invoiceItems);
     }
 }

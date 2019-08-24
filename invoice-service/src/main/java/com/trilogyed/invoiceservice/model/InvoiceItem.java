@@ -8,11 +8,11 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public class InvoiceItem {
-    private int id;
+    private int invoiceItemId;
     @Positive
     private int invoiceId;
     @Positive
-    private int inventory_id;
+    private int inventoryId;
     @Positive
     private int quantity;
     @NotNull
@@ -24,19 +24,19 @@ public class InvoiceItem {
     }
 
     public InvoiceItem(int id, int invoiceId, int inventory_id, int quantity, BigDecimal unitPrice) {
-        this.id = id;
+        this.invoiceItemId = id;
         this.invoiceId = invoiceId;
-        this.inventory_id = inventory_id;
+        this.inventoryId = inventory_id;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
     }
 
-    public int getId() {
-        return id;
+    public int getInvoiceItemId() {
+        return invoiceItemId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setInvoiceItemId(int invoiceItemId) {
+        this.invoiceItemId = invoiceItemId;
     }
 
     public int getInvoiceId() {
@@ -47,12 +47,12 @@ public class InvoiceItem {
         this.invoiceId = invoiceId;
     }
 
-    public int getInventory_id() {
-        return inventory_id;
+    public int getInventoryId() {
+        return inventoryId;
     }
 
-    public void setInventory_id(int inventory_id) {
-        this.inventory_id = inventory_id;
+    public void setInventoryId(int inventoryId) {
+        this.inventoryId = inventoryId;
     }
 
     public int getQuantity() {
@@ -76,24 +76,24 @@ public class InvoiceItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InvoiceItem that = (InvoiceItem) o;
-        return id == that.id &&
+        return invoiceItemId == that.invoiceItemId &&
                 invoiceId == that.invoiceId &&
-                inventory_id == that.inventory_id &&
+                inventoryId == that.inventoryId &&
                 quantity == that.quantity &&
                 unitPrice.equals(that.unitPrice);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, invoiceId, inventory_id, quantity, unitPrice);
+        return Objects.hash(invoiceItemId, invoiceId, inventoryId, quantity, unitPrice);
     }
 
     @Override
     public String toString() {
         return "InvoiceItem{" +
-                "id=" + id +
+                "invoiceItemId=" + invoiceItemId +
                 ", invoiceId=" + invoiceId +
-                ", inventory_id=" + inventory_id +
+                ", inventoryId=" + inventoryId +
                 ", quantity=" + quantity +
                 ", unitPrice=" + unitPrice +
                 '}';
