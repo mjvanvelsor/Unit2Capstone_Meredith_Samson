@@ -7,7 +7,7 @@ import com.trilogyed.retailapiservice.model.LevelUp;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public class CustomerInvoiceLevelupViewmodel {
+public class CustomerInvoiceViewModel {
    private int customerId;
    private int invoiceId;
    private Invoice invoice;
@@ -15,14 +15,14 @@ public class CustomerInvoiceLevelupViewmodel {
    private LevelUp levelUp;
    private BigDecimal invoiceValue;
    
-   public CustomerInvoiceLevelupViewmodel() {
+   public CustomerInvoiceViewModel() {
    }
    
-   public CustomerInvoiceLevelupViewmodel(int customerId,
-                                          int invoiceId, Invoice invoice,
-                                          Customer customer,
-                                          LevelUp levelUp,
-                                          BigDecimal invoiceValue) {
+   public CustomerInvoiceViewModel(int customerId,
+                                   int invoiceId, Invoice invoice,
+                                   Customer customer,
+                                   LevelUp levelUp,
+                                   BigDecimal invoiceValue) {
       this.customerId = customerId;
       this.invoiceId = invoiceId;
       this.invoice = invoice;
@@ -83,7 +83,7 @@ public class CustomerInvoiceLevelupViewmodel {
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      CustomerInvoiceLevelupViewmodel viewmodel = (CustomerInvoiceLevelupViewmodel) o;
+      CustomerInvoiceViewModel viewmodel = (CustomerInvoiceViewModel) o;
       return customerId == viewmodel.customerId &&
             invoiceId == viewmodel.invoiceId &&
             invoice.equals(viewmodel.invoice) &&

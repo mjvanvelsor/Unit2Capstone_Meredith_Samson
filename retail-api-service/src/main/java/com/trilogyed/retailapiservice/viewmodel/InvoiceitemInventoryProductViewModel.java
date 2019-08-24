@@ -6,7 +6,7 @@ import com.trilogyed.retailapiservice.model.Product;
 
 import java.util.Objects;
 
-public class InvoiceItemInventoryProductViewmodel {
+public class InvoiceitemInventoryProductViewModel {
    private int invoiceItemId;
    private InvoiceItem invoiceItem;
    private int inventoryId;
@@ -14,10 +14,10 @@ public class InvoiceItemInventoryProductViewmodel {
    private int productId;
    private Product product;
    
-   public InvoiceItemInventoryProductViewmodel() {
+   public InvoiceitemInventoryProductViewModel() {
    }
    
-   public InvoiceItemInventoryProductViewmodel(int invoiceItemId,
+   public InvoiceitemInventoryProductViewModel(int invoiceItemId,
                                                InvoiceItem invoiceItem,
                                                int inventoryId,
                                                Inventory inventory,
@@ -82,7 +82,7 @@ public class InvoiceItemInventoryProductViewmodel {
    public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      InvoiceItemInventoryProductViewmodel that = (InvoiceItemInventoryProductViewmodel) o;
+      InvoiceitemInventoryProductViewModel that = (InvoiceitemInventoryProductViewModel) o;
       return invoiceItemId == that.invoiceItemId &&
             inventoryId == that.inventoryId &&
             productId == that.productId &&
