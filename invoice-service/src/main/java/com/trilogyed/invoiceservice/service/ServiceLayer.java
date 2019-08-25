@@ -5,14 +5,18 @@ import com.trilogyed.invoiceservice.dao.InvoiceItemDao;
 import com.trilogyed.invoiceservice.exception.NotFoundException;
 import com.trilogyed.invoiceservice.model.Invoice;
 import com.trilogyed.invoiceservice.model.InvoiceItem;
-import com.trilogyed.invoiceservice.model.InvoiceViewModel;
+import com.trilogyed.invoiceservice.ViewModel.InvoiceViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+
 @Component
 public class ServiceLayer {
     InvoiceDao invoiceDao;
@@ -23,32 +27,86 @@ public class ServiceLayer {
         this.invoiceDao = invoiceDao;
         this.invoiceItemDao = invoiceItemDao;
     }
-
-    /**
-     * INVOICE API
-     * @param invoice
-     * @return
-     */
+    
     @Transactional
-    public InvoiceViewModel createInvoice(Invoice invoice){
-        invoice = invoiceDao.createInvoice(invoice);
-        invoice.setInvoiceId(invoice.getInvoiceId());
-        return buildIVMwithInvoice(invoice);
+    public InvoiceViewModel createInvoice(InvoiceViewModel ivm){
+        System.out.println("Processed: " + ivm);
+        // create invoice header
+        Invoice inv = new Invoice();
+        inv.setCustomerId(ivm.getCustomerId());
+        inv.setPurchaseDate(ivm.getPurchaseDate());
+        inv = invoiceDao.createInvoice(inv);
+        
+        // create invoice items
+        List<InvoiceItem> invoiceItems = new ArrayList<>();
+        InvoiceItem invItm = new InvoiceItem();
+        Iterator<InvoiceItem> iter = ivm.getInvoiceItems().iterator();
+        while (iter.hasNext()) {
+            invItm = iter.next();
+            invItm.setInvoiceId(inv.getInvoiceId());
+            invItm = invoiceItemDao.createInvoiceItem(invItm);
+            invoiceItems.add(invItm);
+        }
+        
+        return buildInvoiceViewModel(inv, invoiceItems);
+    }
+    
+    // Helper Method
+    private InvoiceViewModel buildInvoiceViewModel(Invoice inv, List<InvoiceItem> invItms){
+        InvoiceViewModel ivm = new InvoiceViewModel();
+        ivm.setInvoiceId(inv.getInvoiceId());
+        ivm.setCustomerId(inv.getCustomerId());
+        ivm.setPurchaseDate(inv.getPurchaseDate());
+        ivm.setInvoiceItems(invItms);
+        
+        return ivm;
+        
     }
 
     public InvoiceViewModel getInvoice(int invoiceId){
-        Invoice invoice = invoiceDao.getInvoice(invoiceId);
-        if (invoice == null)
-            return null;
-        else
-        return buildIVMwithInvoice(invoice);
+        Optional<Invoice> optionalInv = Optional.ofNullable(invoiceDao.getInvoice(invoiceId));
+        optionalInv.orElseThrow(()-> new NotFoundException(
+              "Invoice id: " + invoiceId + " not found in the Invoice File"));
+        
+        Optional<List<InvoiceItem>> optionalInvItms = Optional.ofNullable(
+              invoiceItemDao.getAllInvoiceItemsByInvoiceId(invoiceId));
+        
+        InvoiceViewModel ivm = new InvoiceViewModel();
+        ivm.setInvoiceId(optionalInv.get().getInvoiceId());
+        ivm.setCustomerId(optionalInv.get().getCustomerId());
+        ivm.setPurchaseDate(optionalInv.get().getPurchaseDate());
+        ivm.setInvoiceItems(optionalInvItms.get().subList(0,optionalInvItms.get().size()));
+        
+        return ivm;
     }
+    
     public List<InvoiceViewModel> getAllInvoices(){
         List<InvoiceViewModel> invoiceViewModels = new ArrayList<>();
-        List<Invoice> invoices = invoiceDao.getAllInvoices();
-        invoices.stream().forEach(invoice -> invoiceViewModels.add(buildIVMwithInvoice(invoice)));
+        InvoiceViewModel ivm = new InvoiceViewModel();
+        
+        // get all invoices
+        Optional<List<Invoice>> optionalInvoices = Optional.ofNullable(
+              invoiceDao.getAllInvoices());
+        optionalInvoices.orElseThrow(()-> new NotFoundException(
+              "No invoice found in the Invoice File"));
+        Invoice inv = new Invoice();
+
+        // get all invoice items for each invoice
+        Iterator<Invoice> iter = optionalInvoices.get().iterator();
+        while (iter.hasNext()) {
+            inv = iter.next();
+            
+            // get invoice items for a specific invoice
+            Optional<List<InvoiceItem>> optionalInvItms = Optional.ofNullable(
+                  invoiceItemDao.getAllInvoiceItemsByInvoiceId(inv.getInvoiceId()));
+            
+            ivm = buildInvoiceViewModel(inv, optionalInvItms.get());
+            invoiceViewModels.add(ivm);
+        }
+        
         return invoiceViewModels;
     }
+
     @Transactional
     public void amendInvoice(InvoiceViewModel ivm){
         Invoice invoice = new Invoice();
@@ -56,54 +114,19 @@ public class ServiceLayer {
         invoice.setCustomerId(ivm.getCustomerId());
         invoice.setPurchaseDate(ivm.getPurchaseDate());
         invoiceDao.amendInvoice(invoice);
-    }
-    public void deleteInvoice(int invoiceId){
-        invoiceDao.deleteInvoice(invoiceId);
-    }
-
-    /**
-     * INVOICE ITEM API
-     * @param invoiceItem
-     * @return
-     */
-    public InvoiceItem createInvoiceItem(InvoiceItem invoiceItem){
-        return invoiceItemDao.createInvoiceItem(invoiceItem);
-    }
-    public InvoiceItem getInvoiceItem(int invoiceItemId){
-        return invoiceItemDao.getInvoiceItem(invoiceItemId);
-    }
-    public List<InvoiceItem> getAllInvoiceItems(){
-        return invoiceItemDao.getAllInvoiceItems();
-    }
-    public List<InvoiceItem> getAllInvoiceItemsByInvoiceId(int invoiceId){
-        return invoiceItemDao.getAllInvoiceItemsByInvoiceId(invoiceId);
-    }
-    public void amendInvoiceItem(InvoiceItem invoiceItem){
-        invoiceItemDao.amendInvoiceItem(invoiceItem);
-    }
-    public void deleteInvoiceItem(int invoiceItemId){
-        invoiceItemDao.deleteInvoiceItem(invoiceItemId);
-    }
-
-
-    // Helper Method
-    private InvoiceViewModel buildIVMwithInvoice(Invoice invoice){
-        InvoiceViewModel ivm = new InvoiceViewModel();
-        ivm.setInvoiceId(invoice.getInvoiceId());
-        ivm.setCustomerId(invoice.getCustomerId());
-        ivm.setPurchaseDate(invoice.getPurchaseDate());
-
-        try {
-            // THIS NEEDS TO BE CHANGED BUT I'M NOT SURE TO WHAT
-            List<InvoiceItem> items = new ArrayList<>();
-            ivm.setInvoiceItems(items);
-        } catch (Exception e){
-                        if (e.getCause().getClass().equals(SocketTimeoutException.class)) {
-                throw new NotFoundException("Server connection timeout!");
-            } else {
-                throw e;
-            }
+        
+        Iterator<InvoiceItem> iter = ivm.getInvoiceItems().iterator();
+        while(iter.hasNext()) {
+            invoiceItemDao.amendInvoiceItem(iter.next());
         }
-        return  ivm;
+    }
+    
+    @Transactional
+    public void deleteInvoice(int invoiceId){
+        invoiceItemDao.getAllInvoiceItemsByInvoiceId(invoiceId)
+              .stream()
+              .forEach(invoiceItem -> invoiceItemDao.deleteInvoiceItem(invoiceItem.getInvoiceItemId()));
+
+        invoiceDao.deleteInvoice(invoiceId);
     }
 }

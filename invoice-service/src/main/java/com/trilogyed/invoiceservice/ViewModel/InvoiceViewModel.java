@@ -1,9 +1,10 @@
-package com.trilogyed.invoiceservice.model;
+package com.trilogyed.invoiceservice.ViewModel;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.trilogyed.invoiceservice.model.InvoiceItem;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -80,5 +81,15 @@ public class InvoiceViewModel {
     @Override
     public int hashCode() {
         return Objects.hash(invoiceId, customerId, purchaseDate, invoiceItems);
+    }
+    
+    @Override
+    public String toString() {
+        return "InvoiceViewModel{" +
+              "invoiceId=" + invoiceId +
+              ", customerId=" + customerId +
+              ", purchaseDate=" + purchaseDate +
+              ", invoiceItems=" + invoiceItems +
+              '}';
     }
 }
