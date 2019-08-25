@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import java.util.Objects;
 public class Invoice {
     private int invoiceId;
     @Positive
+    @Size(min=1, max=999999999)
     private int customerId;
     @NotNull
     @JsonSerialize(using = LocalDateSerializer.class)

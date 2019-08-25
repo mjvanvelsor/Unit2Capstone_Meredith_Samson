@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,30 +26,23 @@ public class InvoiceDaoJdbcTemplateImplTest {
 
     @Before
     public void setUp() throws Exception {
-        List<InvoiceItem> invoiceItems = invoiceItemDao.getAllInvoiceItems();
-        invoiceItems.stream().forEach(invoiceItem -> invoiceItemDao.deleteInvoiceItem(invoiceItem.getInvoiceItemId()));
-        List<Invoice> invoices = invoiceDao.getAllInvoices();
-        invoices.stream().forEach(invoice -> invoiceDao.deleteInvoice(invoice.getInvoiceId()));
+        invoiceItemDao.getAllInvoiceItems()
+              .stream()
+              .forEach(invoiceItem -> invoiceItemDao.deleteInvoiceItem(invoiceItem.getInvoiceItemId()));
+        invoiceDao.getAllInvoices()
+              .stream()
+              .forEach(invoice -> invoiceDao.deleteInvoice(invoice.getInvoiceId()));
     }
 
     @Test
     public void createGetDeleteInvoice() {
         Invoice invoice = new Invoice();
-        invoice.setCustomerId(1);
         invoice.setCustomerId(12345);
         invoice.setPurchaseDate(LocalDate.of(2019, 8 , 20));
-        invoiceDao.createInvoice(invoice);
-
-        InvoiceItem invoiceItem = new InvoiceItem();
-//        invoiceItem.setInvoiceItemId(1);
-        invoiceItem.setInvoiceId(invoice.getInvoiceId());
-        invoiceItem.setInventoryId(3);
-        invoiceItem.setQuantity(4);
-        invoiceItem.setUnitPrice(new BigDecimal(19.99).setScale(2, BigDecimal.ROUND_HALF_UP));
-        invoiceItemDao.createInvoiceItem(invoiceItem);
-
+        invoice = invoiceDao.createInvoice(invoice);
+        
         assertEquals(invoice, invoiceDao.getInvoice(invoice.getInvoiceId()));
-        invoiceItemDao.deleteInvoiceItem(invoiceItem.getInvoiceItemId());
+        
         invoiceDao.deleteInvoice(invoice.getInvoiceId());
         assertNull(invoiceDao.getInvoice(invoice.getInvoiceId()));
     }
@@ -56,26 +50,25 @@ public class InvoiceDaoJdbcTemplateImplTest {
     @Test
     public void getAllInvoices() {
         Invoice invoice = new Invoice();
-        invoice.setCustomerId(1);
         invoice.setCustomerId(12345);
         invoice.setPurchaseDate(LocalDate.of(2019, 8 , 20));
-        invoiceDao.createInvoice(invoice);
+        invoice = invoiceDao.createInvoice(invoice);
+        
         Invoice invoice1 = new Invoice();
-        invoice1.setCustomerId(2);
         invoice1.setCustomerId(23456);
         invoice1.setPurchaseDate(LocalDate.of(2019, 9 , 20));
-        invoiceDao.createInvoice(invoice1);
+        invoice1 = invoiceDao.createInvoice(invoice1);
+        
         List<Invoice> invoices = invoiceDao.getAllInvoices();
-        assertEquals(invoices.size(), 2);
+        assertEquals(2, invoices.size());
     }
 
     @Test
     public void amendInvoice() {
         Invoice invoice = new Invoice();
-        invoice.setCustomerId(1);
         invoice.setCustomerId(12345);
         invoice.setPurchaseDate(LocalDate.of(2019, 8 , 20));
-        invoiceDao.createInvoice(invoice);
+        invoice = invoiceDao.createInvoice(invoice);
 
         invoice.setCustomerId(56789);
         invoiceDao.amendInvoice(invoice);
