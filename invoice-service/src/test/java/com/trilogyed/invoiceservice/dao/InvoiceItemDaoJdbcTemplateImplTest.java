@@ -44,7 +44,7 @@ public class InvoiceItemDaoJdbcTemplateImplTest {
         InvoiceItem invoiceItem = new InvoiceItem();
         invoiceItem.setInvoiceId(invoice.getInvoiceId());
         invoiceItem.setInventoryId(3);
-        invoiceItem.setQuantity(4);
+        invoiceItem.setQuantity(1);
         invoiceItem.setUnitPrice(new BigDecimal(19.99).setScale(2, RoundingMode.HALF_EVEN));
         invoiceItem = invoiceItemDao.createInvoiceItem(invoiceItem);
 
