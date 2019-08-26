@@ -22,6 +22,8 @@ public class InvoiceDaoJdbcTemplateImpl implements InvoiceDao{
             "insert into invoice (customer_id, purchase_date) values (?, ?)";
     public static final String SELECT_INVOICE_SQL =
             "select * from invoice where invoice_id = ?";
+    public static final String SELECT_INVOICES_BY_CUSTOMER_SQL =
+          "select * from invoice where customer_id = ?";
     public static final String SELECT_ALL_INVOICES_SQL =
             "select * from invoice";
     public static final String UPDATE_INVOICE_SQL =
@@ -58,7 +60,12 @@ public class InvoiceDaoJdbcTemplateImpl implements InvoiceDao{
     public List<Invoice> getAllInvoices() {
         return jdbcTemplate.query(SELECT_ALL_INVOICES_SQL, this::mapRowToInvoice);
     }
-
+    
+    @Override
+    public List<Invoice> getInvoicesByCustomer(int customerId) {
+        return jdbcTemplate.query(SELECT_INVOICES_BY_CUSTOMER_SQL, this::mapRowToInvoice, customerId);
+    }
+    
     @Override
     public void amendInvoice(Invoice invoice) {
         jdbcTemplate.update(

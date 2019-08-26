@@ -10,22 +10,22 @@ import java.util.List;
 @FeignClient(name="levelup-service")
 public interface LevelUpService {
    
-   @RequestMapping(value = "/levelup", method = RequestMethod.POST)
+   @RequestMapping(value = "/levelups", method = RequestMethod.POST)
    LevelUp createLevelUp(@Valid @RequestBody LevelUp levelUp);
    
-   @RequestMapping(value = "/levelup/{levelUpId}", method = RequestMethod.GET)
+   @RequestMapping(value = "/levelups/{levelUpId}", method = RequestMethod.GET)
    LevelUp getLevelUp(@Valid @PathVariable("levelUpId") int levelUpId);
    
-   @RequestMapping(value = "/levelup/customer/{customerId}", method = RequestMethod.GET)
+   @RequestMapping(value = "/levelups/customer/{customerId}", method = RequestMethod.GET)
    LevelUp getLevelUpByCustomer(@Valid @PathVariable("customerId") int customerId);
    
-   @RequestMapping(value = "/levelup", method = RequestMethod.GET)
+   @RequestMapping(value = "/levelups", method = RequestMethod.GET)
    List<LevelUp> getAllLevelUp();
    
-   @RequestMapping(value = "/levelup", method = RequestMethod.PUT)
+   @RequestMapping(value = "/levelups", method = RequestMethod.PUT)
    void amendLevelUp(@Valid @RequestBody LevelUp levelUp);
    
-   @RequestMapping(value = "/levelup/{levelUpId}", method = RequestMethod.DELETE)
+   @RequestMapping(value = "/levelups/{levelUpId}", method = RequestMethod.DELETE)
    void deleteLevelUp(@Valid @PathVariable("levelUpId") int levelUpId);
    
 }

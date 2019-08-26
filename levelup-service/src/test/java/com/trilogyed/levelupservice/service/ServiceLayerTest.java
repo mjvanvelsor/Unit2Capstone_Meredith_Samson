@@ -48,16 +48,29 @@ public class ServiceLayerTest {
 
         doReturn(levelUp1).when(levelUpDao).createLevelUp(levelUp);
         doReturn(levelUp1).when(levelUpDao).getLevelUp(1);
+        doReturn(levelUp1).when(levelUpDao).getLevelUpByCustomer(34567);
         doReturn(levelUps).when(levelUpDao).getAllLevelUps();
     }
 
     @Test
-    public void createGetLevelUp() {
+    public void createNewGetLevelUp() {
         LevelUp levelUp = new LevelUp();
         levelUp.setCustomerId(34567);
         levelUp.setPoints(150);
         levelUp.setMemberDate(LocalDate.of(2019,8,20));
 
+        LevelUp item = service.createLevelUp(levelUp);
+        LevelUp item2 = service.getLevelUp(item.getLevelUpId());
+        assertEquals(item, item2);
+    }
+    
+    @Test
+    public void createUpdateExistingLevelUp() {
+        LevelUp levelUp = new LevelUp();
+        levelUp.setCustomerId(34567);
+        levelUp.setPoints(150);
+        levelUp.setMemberDate(LocalDate.of(2019,8,20));
+        
         LevelUp item = service.createLevelUp(levelUp);
         LevelUp item2 = service.getLevelUp(item.getLevelUpId());
         assertEquals(item, item2);

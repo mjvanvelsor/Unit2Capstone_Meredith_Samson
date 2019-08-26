@@ -28,7 +28,7 @@ public class LevelupController {
 
     @GetMapping("/{levelUpId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public LevelUp findLevelUp(@PathVariable int levelUpId)
+    public LevelUp getLevelUp(@PathVariable int levelUpId)
             throws NotFoundException{
         LevelUp levelUp = service.getLevelUp(levelUpId);
         if (levelUp == null){
@@ -39,14 +39,20 @@ public class LevelupController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<LevelUp> findAllLevelUps(){
+    public List<LevelUp> getAllLevelUp(){
         List<LevelUp> levelUps = service.getAllLevelUps();
         return levelUps;
+    }
+    
+    @GetMapping("/customer/{customerId}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public LevelUp getLevelUpByCustomer(@PathVariable int customerId) {
+        return service.getLevelUpByCustomer(customerId);
     }
 
     @PutMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public void updateLevelUp(@RequestBody @Valid LevelUp levelUp) {
+    public void amendLevelUp(@RequestBody @Valid LevelUp levelUp) {
             service.amendLevelUp(levelUp);
     }
 

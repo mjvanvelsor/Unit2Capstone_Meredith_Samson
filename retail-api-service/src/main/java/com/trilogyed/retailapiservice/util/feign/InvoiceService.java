@@ -19,11 +19,11 @@ public interface InvoiceService {
    @RequestMapping(value = "/invoices/{invoiceId}", method = RequestMethod.GET)
    Invoice getInvoice(@Valid @PathVariable("invoiceId") int invoiceId);
    
+   @RequestMapping(value = "/invoices/customer/{customerId}", method = RequestMethod.GET)
+   List<Invoice> getInvoicesByCustomer(@Valid @PathVariable("customerId") int customerId);
+   
    @RequestMapping(value = "/invoices", method = RequestMethod.GET)
    List<Invoice> getAllInvoices();
-   
-   @RequestMapping(value = "/invoices/customer/{customerId}", method = RequestMethod.GET)
-   List<Invoice> getInvoicesByCustomerId(@Valid @PathVariable("customerId") int customerId);
    
    @RequestMapping(value = "/invoices", method = RequestMethod.PUT)
    void amendInvoice(@Valid @RequestBody Invoice invoice);

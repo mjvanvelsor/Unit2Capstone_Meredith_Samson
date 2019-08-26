@@ -42,7 +42,14 @@ public class InvoiceController {
     public List<InvoiceViewModel> findAllInvoices() {
         return service.getAllInvoices();
     }
-
+    
+    @GetMapping("/customer/{customerId}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public List<InvoiceViewModel> getInvoicesByCustomer(Integer customerId) {
+        System.out.println("Got here");
+        return service.getInvoicesByCustomer(customerId);
+    }
+    
     @PutMapping
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
     public void updateInvoice(@RequestBody @Valid InvoiceViewModel ivm) {

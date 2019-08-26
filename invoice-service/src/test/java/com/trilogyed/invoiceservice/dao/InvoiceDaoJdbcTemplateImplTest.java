@@ -62,6 +62,22 @@ public class InvoiceDaoJdbcTemplateImplTest {
         List<Invoice> invoices = invoiceDao.getAllInvoices();
         assertEquals(2, invoices.size());
     }
+    
+    @Test
+    public void getInvoicesByCustomerId() {
+        Invoice invoice = new Invoice();
+        invoice.setCustomerId(12345);
+        invoice.setPurchaseDate(LocalDate.of(2019, 8 , 20));
+        invoice = invoiceDao.createInvoice(invoice);
+        
+        Invoice invoice1 = new Invoice();
+        invoice1.setCustomerId(23456);
+        invoice1.setPurchaseDate(LocalDate.of(2019, 9 , 20));
+        invoice1 = invoiceDao.createInvoice(invoice1);
+        
+        List<Invoice> invoices = invoiceDao.getAllInvoices();
+        assertEquals(2, invoices.size());
+    }
 
     @Test
     public void amendInvoice() {

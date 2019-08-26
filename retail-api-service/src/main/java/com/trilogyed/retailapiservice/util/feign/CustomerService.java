@@ -13,19 +13,19 @@ import java.util.List;
 @FeignClient(name = "customer-service")
 public interface CustomerService {
    
-   @RequestMapping(value = "/customer", method = RequestMethod.POST)
+   @RequestMapping(value = "/customers", method = RequestMethod.POST)
    Customer createCustomer(@Valid @RequestBody Customer customer);
    
-   @RequestMapping(value = "/customer/{customerId}", method = RequestMethod.GET)
-   Customer getCustomer(@Valid @PathVariable("customerId") int customerId);
+   @RequestMapping(value = "/customers/{customerId}", method = RequestMethod.GET)
+   Customer findCustomer(@Valid @PathVariable("customerId") int customerId);
    
-   @RequestMapping(value = "/customer", method = RequestMethod.GET)
+   @RequestMapping(value = "/customers", method = RequestMethod.GET)
    List<Customer> getAllCustomers();
    
-   @RequestMapping(value = "/customer", method = RequestMethod.PUT)
+   @RequestMapping(value = "/customers", method = RequestMethod.PUT)
    void amendCustomer(@Valid @RequestBody Customer customer);
    
-   @RequestMapping(value = "/customer/{customerId}", method = RequestMethod.DELETE)
+   @RequestMapping(value = "/customers/{customerId}", method = RequestMethod.DELETE)
    void deleteCustomer(@Valid @PathVariable("customerId") int customerId);
    
 }

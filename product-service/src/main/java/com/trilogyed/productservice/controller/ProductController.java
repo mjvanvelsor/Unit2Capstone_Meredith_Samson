@@ -28,7 +28,7 @@ public class ProductController {
    
    @GetMapping("/{productId}")
    @ResponseStatus(value = HttpStatus.OK)
-   public Product findProduct(@PathVariable int productId)
+   public Product getProduct(@PathVariable int productId)
          throws NotFoundException {
       Product product = service.getProduct(productId);
       if (product == null) {
