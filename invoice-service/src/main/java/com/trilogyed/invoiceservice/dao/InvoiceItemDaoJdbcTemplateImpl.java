@@ -86,7 +86,10 @@ public class InvoiceItemDaoJdbcTemplateImpl implements InvoiceItemDao {
 
     @Override
     public void deleteInvoiceItem(int invoiceItemId) {
-
+        jdbcTemplate.update(
+                DELETE_INVOICE_ITEM_SQL,
+                invoiceItemId
+        );
     }
 
     // Helper Method
