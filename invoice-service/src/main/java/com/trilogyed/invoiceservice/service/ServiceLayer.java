@@ -50,18 +50,6 @@ public class ServiceLayer {
         
         return buildInvoiceViewModel(inv, invoiceItems);
     }
-    
-    // Helper Method
-    private InvoiceViewModel buildInvoiceViewModel(Invoice inv, List<InvoiceItem> invItms){
-        InvoiceViewModel ivm = new InvoiceViewModel();
-        ivm.setInvoiceId(inv.getInvoiceId());
-        ivm.setCustomerId(inv.getCustomerId());
-        ivm.setPurchaseDate(inv.getPurchaseDate());
-        ivm.setInvoiceItems(invItms);
-        
-        return ivm;
-        
-    }
 
     public InvoiceViewModel getInvoice(int invoiceId){
         Optional<Invoice> optionalInv = Optional.ofNullable(invoiceDao.getInvoice(invoiceId));
@@ -106,7 +94,35 @@ public class ServiceLayer {
         
         return invoiceViewModels;
     }
-
+    
+    public List<InvoiceViewModel> getInvoicesByCustomer(int customerId){
+        System.out.println("Customer Id: " + customerId);
+        List<InvoiceViewModel> invoiceViewModels = new ArrayList<>();
+        InvoiceViewModel ivm = new InvoiceViewModel();
+        
+        // get all invoices
+        Optional<List<Invoice>> optionalInvoices = Optional.ofNullable(
+              invoiceDao.getInvoicesByCustomer(customerId));
+        optionalInvoices.orElseThrow(()-> new NotFoundException(
+              "No invoice found in the Invoice File"));
+        Invoice inv = new Invoice();
+        
+        // get all invoice items for each invoice
+        Iterator<Invoice> iter = optionalInvoices.get().iterator();
+        while (iter.hasNext()) {
+            inv = iter.next();
+            
+            // get invoice items for a specific invoice
+            Optional<List<InvoiceItem>> optionalInvItms = Optional.ofNullable(
+                  invoiceItemDao.getAllInvoiceItemsByInvoiceId(inv.getInvoiceId()));
+            
+            ivm = buildInvoiceViewModel(inv, optionalInvItms.get());
+            invoiceViewModels.add(ivm);
+        }
+        
+        return invoiceViewModels;
+    }
+    
     @Transactional
     public void amendInvoice(InvoiceViewModel ivm){
         Invoice invoice = new Invoice();
@@ -129,4 +145,17 @@ public class ServiceLayer {
 
         invoiceDao.deleteInvoice(invoiceId);
     }
+    
+    // Helper Method
+    private InvoiceViewModel buildInvoiceViewModel(Invoice inv, List<InvoiceItem> invItms){
+        InvoiceViewModel ivm = new InvoiceViewModel();
+        ivm.setInvoiceId(inv.getInvoiceId());
+        ivm.setCustomerId(inv.getCustomerId());
+        ivm.setPurchaseDate(inv.getPurchaseDate());
+        ivm.setInvoiceItems(invItms);
+        
+        return ivm;
+        
+    }
+    
 }

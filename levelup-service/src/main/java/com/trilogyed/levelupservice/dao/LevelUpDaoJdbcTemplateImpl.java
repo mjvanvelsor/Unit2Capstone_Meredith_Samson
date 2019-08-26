@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -35,6 +37,7 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
 
 
     @Override
+    @Transactional
     public LevelUp createLevelUp(LevelUp levelUp) {
         jdbcTemplate.update(
                 INSERT_LEVELUP_SQL,
@@ -63,8 +66,13 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
     
     @Override
     public LevelUp getLevelUpByCustomer(int customerId) {
-        return jdbcTemplate.queryForObject(
-              SELECT_LEVELUP_BY_CUSTOMER_SQL,this::mapRowToLevelUp, customerId);
+        try {
+            return jdbcTemplate.queryForObject(
+                  SELECT_LEVELUP_BY_CUSTOMER_SQL, this::mapRowToLevelUp, customerId);
+        }
+        catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
     
     @Override
@@ -73,6 +81,7 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
     }
 
     @Override
+    @Transactional
     public void amendLevelUp(LevelUp levelUp) {
         jdbcTemplate.update(
                 UPDATE_LEVELUP_SQL,
@@ -84,6 +93,7 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
     }
     
     @Override
+    @Transactional
     public void amendLevelUpByCustomer(LevelUp levelUp) {
         jdbcTemplate.update(
               UPDATE_LEVELUP_BY_CUSTOMER_SQL,
@@ -94,6 +104,7 @@ public class LevelUpDaoJdbcTemplateImpl implements LevelUpDao {
     }
 
     @Override
+    @Transactional
     public void deleteLevelUp(int levelUpId) {
         jdbcTemplate.update(DELETE_LEVELUP_SQL, levelUpId);
     }

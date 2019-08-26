@@ -10,6 +10,7 @@ import com.trilogyed.retailapiservice.viewmodel.CustomerOrderViewModel;
 import com.trilogyed.retailapiservice.viewmodel.InvoiceitemInventoryProductViewModel;
 import com.trilogyed.retailapiservice.viewmodel.ProductsInInventoryViewModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @EnableEurekaClient
 @EnableFeignClients
+@EnableDiscoveryClient
 @Component
 public class ServiceLayer {
    private CustomerService customerService;
@@ -42,13 +44,12 @@ public class ServiceLayer {
    
    @Transactional
    public CustomerInvoiceViewModel submitInvoice(CustomerOrderViewModel order) {
-      // Get the customer. Customer may be null, so we use Optional. If customer is null, throw exception
-      Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomer(order.getCustomerId()));
+      Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.findCustomer(order.getCustomerId()));
       optionalCustomer.orElseThrow(() -> new NotFoundException(
             "Customer Id: " + order.getCustomerId() + " not found. Please check your Customer Id!"));
-      
+
       Customer customer = optionalCustomer.get();
-      
+
       // prepare invoice
       Invoice invoice = new Invoice();
       invoice.setCustomerId(order.getCustomerId());
@@ -121,7 +122,6 @@ public class ServiceLayer {
    }
    
    public CustomerInvoiceViewModel getInvoice(int id) {
-
       // Get the invoice submitted
       Optional<Invoice> optionalInvoice = Optional.ofNullable(invoiceService.getInvoice(id));
       optionalInvoice.orElseThrow(() -> new NotFoundException(
@@ -129,6 +129,21 @@ public class ServiceLayer {
       Invoice invoice = optionalInvoice.get();
    
       return buildCustomerInvoiceViewModel(invoice);
+      
+   }
+   
+   public List<CustomerInvoiceViewModel> getInvoicesByCustomer(int id) {
+      Optional<List<Invoice>> optionalAllInvoices = Optional.ofNullable(invoiceService.getInvoicesByCustomer(id));
+      optionalAllInvoices.orElseThrow(() -> new NotFoundException(
+            "No invoices exist in the system for customer id: " + id + ". Please check your customer Id!"));
+      List<Invoice> invoiceList = optionalAllInvoices.get();
+      Iterator<Invoice> iter = invoiceList.iterator();
+      List<CustomerInvoiceViewModel> viewmodelList = new ArrayList<>();
+      
+      while(iter.hasNext()) {
+         viewmodelList.add(buildCustomerInvoiceViewModel(iter.next()));
+      }
+      return viewmodelList;
       
    }
    
@@ -145,28 +160,11 @@ public class ServiceLayer {
       }
       return viewmodelList;
    }
-   
-   
-   public List<CustomerInvoiceViewModel> getInvoicesByCustomerId(int id) {
-   
-      Optional<List<Invoice>> optionalAllInvoices = Optional.ofNullable(invoiceService.getInvoicesByCustomerId(id));
-      optionalAllInvoices.orElseThrow(() -> new NotFoundException(
-            "No invoices exist in the system for customer id: " + id + ". Please check your customer Id!"));
-      List<Invoice> invoiceList = optionalAllInvoices.get();
-      Iterator<Invoice> iter = invoiceList.iterator();
-      List<CustomerInvoiceViewModel> viewmodelList = new ArrayList<>();
-   
-      while(iter.hasNext()) {
-         viewmodelList.add(buildCustomerInvoiceViewModel(iter.next()));
-      }
-      return viewmodelList;
-   
-   }
 
    // build CustomerInvoiceLevelupViewmodel
    private CustomerInvoiceViewModel buildCustomerInvoiceViewModel(Invoice invoice) {
       // Get the invoice submitted
-      Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.getCustomer(invoice.getCustomerId()));
+      Optional<Customer> optionalCustomer = Optional.ofNullable(customerService.findCustomer(invoice.getCustomerId()));
       optionalCustomer.orElseThrow(() -> new NotFoundException(
             "Customer Id: " + invoice.getCustomerId() + " not found. Please check customer-service!"));
       Customer customer = optionalCustomer.get();

@@ -59,6 +59,7 @@ public class ServiceLayerTest {
       Mockito.doReturn(inv1B).when(invoiceDao).createInvoice(inv1A);
       Mockito.doReturn(inv1B).when(invoiceDao).getInvoice(1);
       Mockito.doReturn(allInvoices).when(invoiceDao).getAllInvoices();
+      Mockito.doReturn(allInvoices).when(invoiceDao).getInvoicesByCustomer(45);
       
    }
    
@@ -144,6 +145,12 @@ public class ServiceLayerTest {
    @Test
    public void getAllInvoices() {
       List<InvoiceViewModel> invoices = service.getAllInvoices();
+      assertEquals(1, invoices.size());
+   }
+   
+   @Test
+   public void getInvoicesByCustomer() {
+      List<InvoiceViewModel> invoices = service.getInvoicesByCustomer(45);
       assertEquals(1, invoices.size());
    }
    

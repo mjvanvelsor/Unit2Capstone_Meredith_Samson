@@ -22,7 +22,7 @@ public class InventoryController {
     @PostMapping
     @ResponseStatus(value = HttpStatus.OK)
     public Inventory createInventory(@RequestBody @Valid Inventory inventory){
-        return inventory;
+        return service.createInventory(inventory);
     }
 
     @GetMapping("/{inventoryId}")
@@ -38,23 +38,16 @@ public class InventoryController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<Inventory> findAllInventories(@PathVariable int inventoryId){
+    public List<Inventory> findAllInventories(){
         List<Inventory> inventoryList = service.getAllInventories();
         return inventoryList;
     }
 
-    @PutMapping("/{inventoryId}")
+    @PutMapping
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    public void updateInventory(@PathVariable int inventoryId, @RequestBody @Valid Inventory inventory)
-            throws IllegalArgumentException {
-        if (inventory.getInventoryId() == 0) {
-            inventory.setInventoryId(inventoryId);
-        } else {
-            throw new IllegalArgumentException("Inventory id must match the id in the Inventory object.");
-        }
+    public void updateInventory(@RequestBody @Valid Inventory inventory) {
         service.amendInventory(inventory);
     }
-
 
     @DeleteMapping("/{inventoryId}")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
