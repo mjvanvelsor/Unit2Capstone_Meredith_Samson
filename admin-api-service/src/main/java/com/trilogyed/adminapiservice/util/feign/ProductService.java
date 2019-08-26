@@ -13,19 +13,19 @@ import java.util.List;
 @FeignClient(name = "product-service")
 public interface ProductService {
    
-   @RequestMapping(value = "/product", method = RequestMethod.POST)
+   @RequestMapping(value = "/products", method = RequestMethod.POST)
    Product createProduct(@Valid @RequestBody Product product);
    
-   @RequestMapping(value = "/product/{productId}", method = RequestMethod.GET)
+   @RequestMapping(value = "/products/{productId}", method = RequestMethod.GET)
    Product getProduct(@Valid @PathVariable("productId") int productId);
    
-   @RequestMapping(value = "/product", method = RequestMethod.GET)
+   @RequestMapping(value = "/products", method = RequestMethod.GET)
    List<Product> getAllProducts();
    
-   @RequestMapping(value = "/product", method = RequestMethod.PUT)
+   @RequestMapping(value = "/products", method = RequestMethod.PUT)
    void amendProduct(@Valid @RequestBody Product product);
    
-   @RequestMapping(value = "/product/{productId}", method = RequestMethod.DELETE)
+   @RequestMapping(value = "/products/{productId}", method = RequestMethod.DELETE)
    void deleteProduct(@Valid @PathVariable("productId") int productId);
    
 }

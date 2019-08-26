@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+
+import java.security.Principal;
 import java.net.URI;
 import java.util.List;
 
@@ -35,7 +37,7 @@ public class RetailController {
 
    @ResponseStatus(HttpStatus.CREATED)
    @RequestMapping(value = "/invoices", method = RequestMethod.POST)
-   public CustomerInvoiceViewModel submitInvoice(@RequestBody CustomerOrderViewModel order) {
+   public CustomerInvoiceViewModel submitInvoice(@RequestBody CustomerOrderViewModel order, Principal principal) {
       CustomerInvoiceViewModel civm = service.submitInvoice(order);
       
       // Send LevelUp Points via the Queue to the levelup-service
@@ -48,43 +50,44 @@ public class RetailController {
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices/{id}", method = RequestMethod.GET)
-   public CustomerInvoiceViewModel getInvoice(@PathVariable int id) {
+   public CustomerInvoiceViewModel getInvoice(@PathVariable int id, Principal principal) {
       return service.getInvoice(id);
    }
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices", method = RequestMethod.GET)
-   public List<CustomerInvoiceViewModel> getAllInvoices() {
+   public List<CustomerInvoiceViewModel> getAllInvoices(Principal principal) {
       return service.getAllInvoices();
    }
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices/customer/{id}", method = RequestMethod.GET)
-   public List<CustomerInvoiceViewModel> getInvoicesByCustomer(@PathVariable int id) {
+   public List<CustomerInvoiceViewModel> getInvoicesByCustomer(@PathVariable int id, Principal principal) {
       return service.getInvoicesByCustomer(id);
    }
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/inventory", method = RequestMethod.GET)
-   public List<ProductsInInventoryViewModel> getProductsInInventory() {
+   public List<ProductsInInventoryViewModel> getProductsInInventory(Principal principal) {
       return service.getProductsInInventory();
    }
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/{id}", method = RequestMethod.GET)
-   public Product getProduct(@PathVariable int id) {
+   public Product getProduct(@PathVariable int id, Principal principal) {
       return service.getProduct(id);
    }
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/products/invoice/{id}", method = RequestMethod.GET)
-   public List<Product> getProductByInvoiceId(@PathVariable int id) {
+   public List<Product> getProductByInvoiceId(@PathVariable int id, Principal principal) {
       return service.getProductByInvoiceId(id);
    }
    
 
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/levelup/customer/{id}", method = RequestMethod.GET)
+   public int getLevelUpPointsByCustomerId(int id, Principal principal) {
    @HystrixCommand(fallbackMethod = "getPointsFallBack")
    public int getLevelUpPointsByCustomerId(int id) {
       return service.getLevelUpPointsByCustomerId(id).getPoints();
