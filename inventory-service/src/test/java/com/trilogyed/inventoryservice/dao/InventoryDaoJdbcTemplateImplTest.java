@@ -26,7 +26,7 @@ public class InventoryDaoJdbcTemplateImplTest {
     }
 
     @Test
-    public void createInventory() {
+    public void createGetDeleteInventory() {
         Inventory inventory = new Inventory();
         inventory.setInventoryId(1);
         inventory.setProductId(1);

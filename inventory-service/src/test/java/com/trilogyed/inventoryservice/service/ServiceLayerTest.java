@@ -49,7 +49,6 @@ public class ServiceLayerTest {
     @Test
     public void createGetInventory() {
         Inventory inventory1 = new Inventory();
-        inventory1.setInventoryId(1);
         inventory1.setProductId(1);
         inventory1.setQuantity(5);
 
@@ -67,7 +66,7 @@ public class ServiceLayerTest {
     @Test
     public void amendInventory() {
         Inventory inventory1 = new Inventory();
-//        inventory1.setInventoryId(1);
+        inventory1.setInventoryId(1);
         inventory1.setProductId(1);
         inventory1.setQuantity(10);
         service.amendInventory(inventory1);
@@ -79,7 +78,14 @@ public class ServiceLayerTest {
 
     @Test
     public void deleteInventory() {
+        Inventory inventory1 = new Inventory();
+        inventory1.setInventoryId(1);
+        inventory1.setProductId(1);
+        inventory1.setQuantity(10);
         service.deleteInventory(1);
-        Inventory inventory = service.getInventory(1);
+    
+        ArgumentCaptor<Integer> inventoryCaptor = ArgumentCaptor.forClass(Integer.class);
+        verify(inventoryDao).deleteInventory(inventoryCaptor.capture());
+        assertEquals(inventory1.getInventoryId(), inventoryCaptor.getValue().intValue());
     }
 }

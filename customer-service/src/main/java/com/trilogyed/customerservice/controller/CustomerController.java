@@ -28,12 +28,10 @@ public class CustomerController {
 
     @GetMapping("/{customerId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public Customer findCustomer(@PathVariable int customerId)
-            throws NotFoundException {
+    public Customer findCustomer(@PathVariable int customerId) {
+        System.out.println("Got there: " + customerId);
         Customer customer = service.getCustomer(customerId);
-        if (customer == null){
-            throw new NotFoundException("Customer could not be retrieved for id: " + customerId);
-        }
+        System.out.println(customer);
         return customer;
     }
 

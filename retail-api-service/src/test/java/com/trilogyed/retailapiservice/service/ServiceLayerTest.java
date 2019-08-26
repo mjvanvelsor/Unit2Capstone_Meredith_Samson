@@ -57,7 +57,7 @@ public class ServiceLayerTest {
       Customer customer = new Customer(100,
             "Firstname", "Lastname", "Street name",
             "Charlotte", "28205", "customer@gmail.com", "704-987-0986");
-      Mockito.doReturn(customer).when(customerService).getCustomer(100);
+      Mockito.doReturn(customer).when(customerService).findCustomer(100);
       
    }
    
@@ -272,7 +272,7 @@ public class ServiceLayerTest {
       allInvoices.add(invoice4B);
       
       Mockito.doReturn(allInvoices).when(invoiceService).getAllInvoices();
-      Mockito.doReturn(allInvoices).when(invoiceService).getInvoicesByCustomerId(100);
+      Mockito.doReturn(allInvoices).when(invoiceService).getInvoicesByCustomer(100);
       
    }
    
@@ -369,7 +369,7 @@ public class ServiceLayerTest {
    
    @Test
    public void getInvoicesByCustomerId() {
-      List<CustomerInvoiceViewModel> rvmList = service.getInvoicesByCustomerId(100);
+      List<CustomerInvoiceViewModel> rvmList = service.getInvoicesByCustomer(100);
       assertEquals(2, rvmList.size());
    }
    

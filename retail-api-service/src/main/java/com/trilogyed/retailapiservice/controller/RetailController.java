@@ -60,8 +60,8 @@ public class RetailController {
    
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/invoices/customer/{id}", method = RequestMethod.GET)
-   public List<CustomerInvoiceViewModel> getInvoicesByCustomerId(@PathVariable int id) {
-      return service.getInvoicesByCustomerId(id);
+   public List<CustomerInvoiceViewModel> getInvoicesByCustomer(@PathVariable int id) {
+      return service.getInvoicesByCustomer(id);
    }
    
    @ResponseStatus(HttpStatus.OK)
