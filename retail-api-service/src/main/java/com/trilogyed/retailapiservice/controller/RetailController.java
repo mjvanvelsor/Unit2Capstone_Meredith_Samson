@@ -1,5 +1,6 @@
 package com.trilogyed.retailapiservice.controller;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.trilogyed.retailapiservice.model.Product;
 import com.trilogyed.retailapiservice.service.ServiceLayer;
 import com.trilogyed.retailapiservice.viewmodel.CustomerInvoiceViewModel;
@@ -9,12 +10,16 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RefreshScope
+@Service
 public class RetailController {
    public static final String EXCHANGE = "levelup-exchange";
    public static final String ROUTING_KEY = "levelup.create.#";
@@ -27,7 +32,7 @@ public class RetailController {
    public RetailController(RabbitTemplate rabbitTemplate) {
       this.rabbitTemplate = rabbitTemplate;
    }
-   
+
    @ResponseStatus(HttpStatus.CREATED)
    @RequestMapping(value = "/invoices", method = RequestMethod.POST)
    public CustomerInvoiceViewModel submitInvoice(@RequestBody CustomerOrderViewModel order) {
@@ -77,10 +82,16 @@ public class RetailController {
       return service.getProductByInvoiceId(id);
    }
    
+
    @ResponseStatus(HttpStatus.OK)
    @RequestMapping(value = "/levelup/customer/{id}", method = RequestMethod.GET)
+   @HystrixCommand(fallbackMethod = "getPointsFallBack")
    public int getLevelUpPointsByCustomerId(int id) {
       return service.getLevelUpPointsByCustomerId(id).getPoints();
    }
+
+    public int getPointsFallBack(){
+        return -1;
+    }
    
 }
