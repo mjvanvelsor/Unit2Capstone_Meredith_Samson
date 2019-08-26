@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -21,14 +22,14 @@ public class ProductController {
    
    @PostMapping
    @ResponseStatus(value = HttpStatus.OK)
-   public Product createProduct(@RequestBody @Valid Product product) {
+   public Product createProduct(@RequestBody @Valid Product product, Principal principal) {
       product = service.createProduct(product);
       return product;
    }
    
    @GetMapping("/{productId}")
    @ResponseStatus(value = HttpStatus.OK)
-   public Product getProduct(@PathVariable int productId)
+   public Product getProduct(@PathVariable int productId, Principal principal)
          throws NotFoundException {
       Product product = service.getProduct(productId);
       if (product == null) {
@@ -39,20 +40,20 @@ public class ProductController {
    
    @GetMapping
    @ResponseStatus(value = HttpStatus.OK)
-   public List<Product> findAllProducts() {
+   public List<Product> findAllProducts(Principal principal) {
       List<Product> products = service.getAllProducts();
       return products;
    }
    
    @PutMapping
    @ResponseStatus(value = HttpStatus.NO_CONTENT)
-   public void updateProduct(@RequestBody @Valid Product product) {
+   public void updateProduct(@RequestBody @Valid Product product, Principal principal) {
       service.amendProduct(product);
    }
    
    @DeleteMapping("/{productId}")
    @ResponseStatus(value = HttpStatus.NO_CONTENT)
-   public void deleteProduct(@PathVariable int productId) {
+   public void deleteProduct(@PathVariable int productId, Principal principal) {
       service.deleteProduct(productId);
    }
 }

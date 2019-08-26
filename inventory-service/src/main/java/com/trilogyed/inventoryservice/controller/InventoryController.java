@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -21,13 +22,13 @@ public class InventoryController {
 
     @PostMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public Inventory createInventory(@RequestBody @Valid Inventory inventory){
+    public Inventory createInventory(@RequestBody @Valid Inventory inventory, Principal principal){
         return service.createInventory(inventory);
     }
 
     @GetMapping("/{inventoryId}")
     @ResponseStatus(value = HttpStatus.OK)
-    public Inventory findInventory(@PathVariable int inventoryId)
+    public Inventory findInventory(@PathVariable int inventoryId, Principal principal)
             throws NotFoundException{
         Inventory inventory = service.getInventory(inventoryId);
         if (inventory == null){
@@ -38,20 +39,20 @@ public class InventoryController {
 
     @GetMapping
     @ResponseStatus(value = HttpStatus.OK)
-    public List<Inventory> findAllInventories(){
+    public List<Inventory> findAllInventories(Principal principal){
         List<Inventory> inventoryList = service.getAllInventories();
         return inventoryList;
     }
 
     @PutMapping
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    public void updateInventory(@RequestBody @Valid Inventory inventory) {
+    public void updateInventory(@RequestBody @Valid Inventory inventory, Principal principal) {
         service.amendInventory(inventory);
     }
 
     @DeleteMapping("/{inventoryId}")
     @ResponseStatus(value = HttpStatus.NO_CONTENT)
-    public void deleteInventory(@PathVariable int inventoryId){
+    public void deleteInventory(@PathVariable int inventoryId, Principal principal){
         service.deleteInventory(inventoryId);
     }
 }
